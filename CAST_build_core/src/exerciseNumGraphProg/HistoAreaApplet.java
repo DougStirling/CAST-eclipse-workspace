@@ -24,7 +24,7 @@ public class HistoAreaApplet extends ExerciseApplet implements IntervalConstants
 	static final private double kLowTailProb = 0.005;
 	static final private double kMinWidthPropn = 0.8;
 	
-	static final protected double kEps = 0.0002;
+	static final protected double kEps = 0.00015;
 	static final protected double kRoughEps = 0.002;
 	static final protected double kEyeballEps = 0.1;
 	
@@ -35,6 +35,8 @@ public class HistoAreaApplet extends ExerciseApplet implements IntervalConstants
 	private DragHistoView histoView;
 	
 	private PropnTemplatePanel propnTemplate;
+
+	private ExportDataButton exportButton;
 	
 	protected ResultValuePanel resultPanel;
 	
@@ -83,6 +85,7 @@ public class HistoAreaApplet extends ExerciseApplet implements IntervalConstants
 		registerParameter("intervalType", "int");
 		registerParameter("cut-offs", "cut-offs");
 		registerParameter("classInfo", "string");
+		registerParameter("dataName", "string");
 	}
 	
 	protected void addTypeDelimiters() {
@@ -185,6 +188,10 @@ public class HistoAreaApplet extends ExerciseApplet implements IntervalConstants
 		return (IntervalLimits)getObjectParam("cut-offs");
 	}
 	
+	protected String getDataName() {
+		return getStringParam("dataName");
+	}
+	
 	protected int getClassDecimals() {
 		StringTokenizer st = new StringTokenizer(getClassInfo());
 		int startDecimals = new NumValue(st.nextToken()).decimals;
@@ -198,37 +205,65 @@ public class HistoAreaApplet extends ExerciseApplet implements IntervalConstants
 	protected XPanel getWorkingPanels(DataSet data) {
 		XPanel thePanel = new XPanel();
 		thePanel.setLayout(new BorderLayout());
-			
-			XPanel histoPanel = new XPanel();
-			histoPanel.setLayout(new AxisLayout());
-			
-				valAxis = new HorizAxis(this);
-			histoPanel.add("Bottom", valAxis);
-			
-				countAxis = new VertAxis(this);
-				countAxis.show(false);
-			histoPanel.add("Left", countAxis);
-			
-				histoView = new DragHistoView(data, this, "y", valAxis, countAxis);
-				histoView.lockBackground(Color.white);
-				histoView.setCanDrag(false);
-				histoView.setShowCounts(hasOption("showCounts"));
-			histoPanel.add("Center", histoView);
-			
-		thePanel.add("Center", histoPanel);
 		
-		if (hasOption("showCounts")) {
-			FormulaContext stdContext = new FormulaContext(kTemplateColor, getStandardFont(), this);
-			propnTemplate = new PropnTemplatePanel("Proportion of values =", stdContext);
-			propnTemplate.lockBackground(kTemplateBackground);
-			registerStatusItem("propnTemplate", propnTemplate);
-			thePanel.add("South", propnTemplate);
+		if (hasOption("externalAnalysis")) {
+			XPanel buttonPanel = new XPanel();
+			buttonPanel.setLayout(new VerticalLayout(VerticalLayout.CENTER, VerticalLayout.VERT_CENTER));
+			
+				exportButton = new ExportDataButton("Export Data", data, "y", "", this);
+			buttonPanel.add(exportButton);
+			
+			thePanel.add("Center", buttonPanel);
+		}
+		else {
+			thePanel.add("Center", createHistoPanel(data, hasOption("showCounts")));
+			
+			if (hasOption("showCounts")) {
+				FormulaContext stdContext = new FormulaContext(kTemplateColor, getStandardFont(), this);
+				propnTemplate = new PropnTemplatePanel("Proportion of values =", stdContext);
+				propnTemplate.lockBackground(kTemplateBackground);
+				registerStatusItem("propnTemplate", propnTemplate);
+				thePanel.add("South", propnTemplate);
+			}
 		}
 		
 		return thePanel;
 	}
 	
+	private XPanel createHistoPanel(DataSet data, boolean showCounts) {
+		XPanel histoPanel = new XPanel();
+		histoPanel.setLayout(new AxisLayout());
+		
+			valAxis = new HorizAxis(this);
+		histoPanel.add("Bottom", valAxis);
+		
+			countAxis = new VertAxis(this);
+			countAxis.show(false);
+		histoPanel.add("Left", countAxis);
+		
+			histoView = new DragHistoView(data, this, "y", valAxis, countAxis);
+			histoView.lockBackground(Color.white);
+			histoView.setCanDrag(false);
+			histoView.setShowCounts(showCounts);
+		histoPanel.add("Center", histoView);
+		return histoPanel;
+	}
+	
 	protected void setDisplayForQuestion() {
+		if (hasOption("externalAnalysis")) {
+			exportButton.setDataName(getDataName());
+		}
+		else {
+			setHistoDisplayForQuestion();
+			
+			if (propnTemplate != null)
+				propnTemplate.setValues(new NumValue(1, 0), new NumValue(1, 0));
+		}
+		
+		resultPanel.clear();
+	}
+	
+	private void setHistoDisplayForQuestion() {
 		valAxis.readNumLabels(getAxisInfo());
 		valAxis.setAxisName(getVarName());
 		valAxis.invalidate();
@@ -250,11 +285,6 @@ public class HistoAreaApplet extends ExerciseApplet implements IntervalConstants
 		String axisString = "0 " + (maxCount + 1) + " " + (maxCount + 2) + " 1";
 		countAxis.readNumLabels(axisString);
 		countAxis.invalidate();
-		
-		if (propnTemplate != null)
-			propnTemplate.setValues(new NumValue(1, 0), new NumValue(1, 0));
-		
-		resultPanel.clear();
 	}
 	
 	
@@ -326,7 +356,7 @@ public class HistoAreaApplet extends ExerciseApplet implements IntervalConstants
 		String propnProbString = getLowerPropnString();
 		switch (result) {
 			case ANS_UNCHECKED:
-				if (showCounts)
+				if (hasOption("externalAnalysis") ||showCounts)
 					messagePanel.insertText("Type the required " + propnProbString + " into the box above.");
 				else {
 					messagePanel.insertText("Use the shape of the histogram to estimate the required " + propnProbString + " to within 0.1 of the correct value.");
@@ -344,14 +374,18 @@ public class HistoAreaApplet extends ExerciseApplet implements IntervalConstants
 				break;
 			case ANS_TOLD:
 				messagePanel.insertRedHeading("Answer\n");
-				if (showCounts)
+				if (hasOption("externalAnalysis")) {
+					messagePanel.insertText(n + " out of the " + nTotal + " values are in the specified range so the proportion is " + n + "/" + nTotal + ".");
+					addPlotToMessage(messagePanel);
+				}
+				else if (showCounts)
 					messagePanel.insertText(n + " out of the " + nTotal + " values are in the specified range.");
 				else
 					messagePanel.insertText("The exact histogram area above the specified range is " + correct + " of the total area.");
 				break;
 			case ANS_CORRECT:
 				messagePanel.insertRedHeading("Good!\n");
-				if (showCounts)
+				if (hasOption("externalAnalysis") || showCounts)
 					messagePanel.insertText(n + " out of the " + nTotal + " values are in the specified range.");
 				else
 					messagePanel.insertText("The exact histogram area above the specified range is " + correct + " of the total area.");
@@ -362,6 +396,8 @@ public class HistoAreaApplet extends ExerciseApplet implements IntervalConstants
 				break;
 			case ANS_WRONG:
 				messagePanel.insertRedHeading("Wrong!\n");
+				if (hasOption("externalAnalysis"))
+					messagePanel.insertText("Count the number of values between the specified limits, then divide by " + nTotal + ".");
 				if (showCounts)
 					messagePanel.insertText("Count the number of values in the selected classes, then divide by " + nTotal + ".");
 				else {
@@ -373,8 +409,23 @@ public class HistoAreaApplet extends ExerciseApplet implements IntervalConstants
 		}
 	}
 	
+	private void addPlotToMessage(MessagePanel messagePanel) {
+		XPanel plot = createHistoPanel(data, true);
+		setHistoDisplayForQuestion();
+		boolean selected[] = getSelectedClasses(getLimits());
+		histoView.setSelectedBars(selected);
+		histoView.repaint();
+		
+		plot.setOpaque(false);
+		valAxis.setOpaque(false);
+		countAxis.setOpaque(false);
+		plot.setPreferredSize(new Dimension(getSize().width - 50, 220));
+		messagePanel.insertGraph(plot);
+		messagePanel.insertText("\n");
+	}
+	
 	protected int getMessageHeight() {
-		return 100;
+		return hasOption("externalAnalysis") ? 340 : 100;
 	}
 	
 //-----------------------------------------------------------
@@ -428,13 +479,42 @@ public class HistoAreaApplet extends ExerciseApplet implements IntervalConstants
 	}
 	
 	private int countValues(IntervalLimits limits) {
-		boolean selected[] = getSelectedClasses(limits);
-		double counts[] = histoView.getClassCounts();
-		
 		int n = 0;
-		for (int i=0 ; i<selected.length ; i++)
-			if (selected[i])
-				n += (int)Math.round(counts[i]);
+		if (hasOption("externalAnalysis")) {
+			NumVariable yVar = (NumVariable)data.getVariable("y");
+			int nValues = yVar.noOfValues();
+			for (int i=0 ; i<nValues ; i++) {
+				double y = ((NumValue)yVar.valueAt(i)).toDouble();
+				switch (limits.questionType) {
+					case LESS_THAN:
+					case LESS_THAN_SIMPLE:
+						if (y < limits.endVal.toDouble())
+							n++;
+						break;
+					case GREATER_THAN:
+					case GREATER_THAN_SIMPLE:
+						if (y > limits.startVal.toDouble())
+							n++;
+						break;
+					case BETWEEN:
+						if (y > limits.startVal.toDouble() && y < limits.endVal.toDouble())
+							n++;
+						break;
+					case OUTSIDE:
+						if (y > limits.startVal.toDouble() || y < limits.endVal.toDouble())
+							n++;
+						break;
+				}
+			}
+		}
+		else {		// to avoid issues with class boundaries, find counts from histogram itself
+			boolean selected[] = getSelectedClasses(limits);
+			double counts[] = histoView.getClassCounts();
+			
+			for (int i=0 ; i<selected.length ; i++)
+				if (selected[i])
+					n += (int)Math.round(counts[i]);
+			}
 		return n;
 	}
 	
@@ -459,7 +539,7 @@ public class HistoAreaApplet extends ExerciseApplet implements IntervalConstants
 		else {
 			double correct = getCorrectCount() / (double)getNValues();
 			
-			if (hasOption("showCounts"))
+			if (hasOption("externalAnalysis") || hasOption("showCounts"))
 				return (Math.abs(correct - attempt) <= kEps) ? ANS_CORRECT : (Math.abs(correct - attempt) <= kRoughEps) ? ANS_CLOSE : ANS_WRONG;
 			else
 				return (Math.abs(correct - attempt) <= kEyeballEps) ? ANS_CORRECT : ANS_WRONG;
@@ -482,13 +562,15 @@ public class HistoAreaApplet extends ExerciseApplet implements IntervalConstants
 		NumValue probValue = new NumValue(correct, 4);
 		resultPanel.showAnswer(probValue);
 		
-		if (propnTemplate != null)
-			propnTemplate.setValues(new NumValue(n, 0), new NumValue(nTotal, 0));
-		
-		if (hasOption("showCounts") || !hasHints) {
-			boolean selected[] = getSelectedClasses(getLimits());
-			histoView.setSelectedBars(selected);
-			histoView.repaint();
+		if (!hasOption("externalAnalysis")) {
+			if (propnTemplate != null)
+				propnTemplate.setValues(new NumValue(n, 0), new NumValue(nTotal, 0));
+			
+			if (hasOption("showCounts") || !hasHints) {
+				boolean selected[] = getSelectedClasses(getLimits());
+				histoView.setSelectedBars(selected);
+				histoView.repaint();
+			}
 		}
 	}
 	

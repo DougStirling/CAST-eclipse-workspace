@@ -12,12 +12,12 @@ import exerciseCateg.*;
 
 
 public class MatchBarPieApplet extends CoreMatchApplet {
-	static final private String[] kYKeys = {"y0", "y1", "y2", "y3"};
-	static final private int kNDisplayedDistns = kYKeys.length;
+	static final protected String[] kYKeys = {"y0", "y1", "y2", "y3"};
+	static final protected int kNDisplayedDistns = kYKeys.length;
 	
-	private HorizAxis catAxis;
-	private PieDrawer pieDrawer = new PieDrawer();
-	private MultipleBarPieView barCharts, pieCharts;
+	protected HorizAxis catAxis;
+	protected PieDrawer pieDrawer = new PieDrawer();
+	protected CoreDragItemsView leftCharts, rightCharts;
 	
 	protected void createDisplay() {
 		setLayout(new BorderLayout(0, 10));
@@ -87,7 +87,7 @@ public class MatchBarPieApplet extends CoreMatchApplet {
 	}
 	
 	protected int getDragMatchHeight() {
-		return barCharts.getSize().height;
+		return leftCharts.getSize().height;
 	}
 	
 	protected void setWorkingPanelLayout(XPanel thePanel) {
@@ -101,11 +101,11 @@ public class MatchBarPieApplet extends CoreMatchApplet {
 				catAxis = new HorizAxis(this);
 			barPanel.add("Bottom", catAxis);
 			
-				barCharts = new MultipleBarPieView(data, this, catAxis, kYKeys, leftOrder,
+				leftCharts = new MultipleBarPieView(data, this, catAxis, kYKeys, leftOrder,
 																								MultipleBarPieView.BAR_CHART, pieDrawer);
-				barCharts.lockBackground(Color.white);
-				registerStatusItem("barPerm", barCharts);
-			barPanel.add("Center", barCharts);
+				leftCharts.lockBackground(Color.white);
+				registerStatusItem("barPerm", leftCharts);
+			barPanel.add("Center", leftCharts);
 			
 		thePanel.add(ProportionLayout.LEFT, barPanel);
 		
@@ -116,10 +116,10 @@ public class MatchBarPieApplet extends CoreMatchApplet {
 			XPanel piePanel = new XPanel();
 			piePanel.setLayout(new BorderLayout(0, 0));
 			
-				pieCharts = new MultipleBarPieView(data, this, null, kYKeys, rightOrder,
+				rightCharts = new MultipleBarPieView(data, this, null, kYKeys, rightOrder,
 																								MultipleBarPieView.PIE_CHART, pieDrawer);
-				registerStatusItem("piePerm", pieCharts);
-			piePanel.add("Center", pieCharts);
+				registerStatusItem("piePerm", rightCharts);
+			piePanel.add("Center", rightCharts);
 			
 			piePanel.add("South", new Separator(0.0, 7));		//	height =  2 * 7 + 2 = 16
 			
@@ -134,11 +134,13 @@ public class MatchBarPieApplet extends CoreMatchApplet {
 	protected void setDisplayForQuestion() {
 		super.setDisplayForQuestion();
 		
-		catAxis.setCatLabels((CatVariable)data.getVariable(kYKeys[0]));
-		catAxis.invalidate();
+		if (catAxis != null) {			//  may be null for external version displaying pie charts
+			catAxis.setCatLabels((CatVariable)data.getVariable(kYKeys[0]));
+			catAxis.invalidate();
+		}
 		
-		barCharts.repaint();
-		pieCharts.repaint();
+		leftCharts.repaint();
+		rightCharts.repaint();
 	}
 	
 	protected void setDataForQuestion() {
@@ -201,7 +203,7 @@ public class MatchBarPieApplet extends CoreMatchApplet {
 	protected void showCorrectWorking() {
 		super.showCorrectWorking();
 		
-		pieCharts.repaint();
+		rightCharts.repaint();
 	}
 	
 }

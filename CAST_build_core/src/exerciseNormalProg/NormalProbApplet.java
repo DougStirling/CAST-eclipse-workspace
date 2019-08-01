@@ -20,7 +20,7 @@ public class NormalProbApplet extends CoreNormalProbApplet {
 //-----------------------------------------------------------
 	
 	protected XPanel getWorkingPanels(DataSet data) {
-		normalLookupPanel = new NormalLookupPanel(data, "distn", this, NormalLookupPanel.HIGH_AND_LOW);
+		normalLookupPanel = new NormalLookupPanel(data, "distn", this, NormalLookupPanel.HIGH_AND_LOW, singleNotMultipleDensities());
 		registerStatusItem("drag", normalLookupPanel);
 		if (hasOption("nTemplate")) {
 			XPanel thePanel = new XPanel();
@@ -37,6 +37,10 @@ public class NormalProbApplet extends CoreNormalProbApplet {
 		}
 		else
 			return normalLookupPanel;
+	}
+	
+	protected boolean singleNotMultipleDensities() {
+		return NormalLookupPanel.MULTIPLE_DENSITIES;
 	}
 	
 	protected void setDisplayForQuestion() {
@@ -56,6 +60,10 @@ public class NormalProbApplet extends CoreNormalProbApplet {
 		double sd = getSD().toDouble();
 		normalDistn.setMean(mean);
 		normalDistn.setSD(sd);
+		setNormalDistnSelection(normalDistn, mean, sd);
+	}
+	
+	protected void setNormalDistnSelection(NormalDistnVariable normalDistn, double mean, double sd) {
 		normalDistn.setMinSelection(mean - sd);
 		normalDistn.setMaxSelection(mean + sd);
 	}
@@ -69,7 +77,7 @@ public class NormalProbApplet extends CoreNormalProbApplet {
 			int n = getN();
 			switch (result) {
 				case ANS_UNCHECKED:
-					messagePanel.insertText("Find the expected number then type it into the text-edit box above.\n(Drag the vertical red lines on the " + densityString() + " to display the required area.)");
+					messagePanel.insertText("Find the expected number then type it into the text-edit box above.\\n(Drag the vertical red lines on the " + densityString() + " to display the required area.)");
 					break;
 				case ANS_INVALID:
 					if (resultPanel.isClear()) {
@@ -83,12 +91,12 @@ public class NormalProbApplet extends CoreNormalProbApplet {
 					break;
 				case ANS_TOLD:
 					messagePanel.insertRedHeading("Answer\n");
-					messagePanel.insertText("This probability is the area " + limits.areaAnswerString() + ".");
+					messagePanel.insertText("This probability is the " + limits.areaAnswerString() + ".");
 					messagePanel.insertText(" This expected number is " + n + " times this.");
 					break;
 				case ANS_CORRECT:
 					messagePanel.insertRedHeading("Correct!\n");
-					messagePanel.insertText("This probability is the area " + limits.areaAnswerString() + ".");
+					messagePanel.insertText("This probability is the " + limits.areaAnswerString() + ".");
 					messagePanel.insertText(" This expected number is " + n + " times this.");
 					break;
 				case ANS_CLOSE:
@@ -97,7 +105,7 @@ public class NormalProbApplet extends CoreNormalProbApplet {
 					break;
 				case ANS_WRONG:
 					messagePanel.insertRedHeading("Not close enough!\n");
-					messagePanel.insertText("Find the area under the " + densityString() + " " + limits.areaAnswerString() + ".");
+					messagePanel.insertText("Use the " + densityString() + " to find the " + limits.areaAnswerString() + ".");
 					messagePanel.insertText(" Then use the template to multiply by " + n + ".");
 					break;
 			}
@@ -105,7 +113,7 @@ public class NormalProbApplet extends CoreNormalProbApplet {
 		else
 			switch (result) {
 				case ANS_UNCHECKED:
-					messagePanel.insertText("Find the probability then type it into the text-edit box above.\n(Drag the vertical red lines on the " + densityString() + " to display the required area.)");
+					messagePanel.insertText("Find the probability then type it into the text-edit box above.\\n(Drag the vertical red lines on the " + densityString() + " to display the required area.)");
 					break;
 				case ANS_INCOMPLETE:
 					messagePanel.insertRedHeading("Error!\n");
@@ -117,11 +125,11 @@ public class NormalProbApplet extends CoreNormalProbApplet {
 					break;
 				case ANS_TOLD:
 					messagePanel.insertRedHeading("Answer\n");
-					messagePanel.insertText("This probability is the area " + limits.areaAnswerString() + ".");
+					messagePanel.insertText("This probability is the " + limits.areaAnswerString() + ".");
 					break;
 				case ANS_CORRECT:
 					messagePanel.insertRedHeading("Correct!\n");
-					messagePanel.insertText("This probability is the area " + limits.areaAnswerString() + ".");
+					messagePanel.insertText("This probability is the " + limits.areaAnswerString() + ".");
 					break;
 				case ANS_CLOSE:
 					messagePanel.insertRedHeading("Good!\n");
@@ -129,7 +137,7 @@ public class NormalProbApplet extends CoreNormalProbApplet {
 					break;
 				case ANS_WRONG:
 					messagePanel.insertRedHeading("Not close enough!\n");
-					messagePanel.insertText("Find the area under the " + densityString() + " " + limits.areaAnswerString() + ".");
+					messagePanel.insertText("Use the " + densityString() + " to find the " + limits.areaAnswerString() + ".");
 					break;
 			}
 	}

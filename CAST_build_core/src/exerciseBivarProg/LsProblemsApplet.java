@@ -28,10 +28,10 @@ public class LsProblemsApplet extends ExerciseApplet {
 	private RandomRectangular xGenerator;
 	private RandomNormal errorGenerator;
 	
-	private XLabel yNameLabel;
-	private HorizAxis xAxis;
-	private VertAxis yAxis;
-	private ScatterAndLineView theView;
+	protected XLabel yNameLabel;
+	protected HorizAxis xAxis;
+	protected VertAxis yAxis;
+	protected ScatterAndLineView theView;
 	
 	private TrueFalseTextPanel problemCheck[] = null;
 	private int checkPermutation[] = {0, 1, 2, 3};
@@ -275,7 +275,7 @@ public class LsProblemsApplet extends ExerciseApplet {
 		return thePanel;
 	}
 	
-	private XPanel getScatterPanel(DataSet data) {
+	protected XPanel getScatterPanel(DataSet data) {
 		XPanel thePanel = new InsetPanel(110, 0);
 		thePanel.setLayout(new BorderLayout(0, 0));
 		
@@ -283,6 +283,7 @@ public class LsProblemsApplet extends ExerciseApplet {
 		thePanel.add("North", yNameLabel);
 			
 			XPanel displayPanel = new XPanel();
+			displayPanel.setOpaque(false);
 			displayPanel.setLayout(new AxisLayout());
 			
 				xAxis = new HorizAxis(this);
@@ -300,7 +301,7 @@ public class LsProblemsApplet extends ExerciseApplet {
 		return thePanel;
 	}
 	
-	private XPanel getCheckboxPanel() {
+	protected XPanel getCheckboxPanel() {
 		XPanel thePanel = new XPanel();
 		thePanel.setLayout(new VerticalLayout(VerticalLayout.FILL, VerticalLayout.VERT_TOP, 3));
 		
@@ -315,15 +316,7 @@ public class LsProblemsApplet extends ExerciseApplet {
 	}
 	
 	protected void setDisplayForQuestion() {
-		xAxis.readNumLabels(getDisplayXAxis());
-		xAxis.setAxisName(getXVarName());
-		xAxis.invalidate();
-		
-		yAxis.readNumLabels(getDisplayYAxis());
-		yNameLabel.setText(getYVarName());
-		yAxis.invalidate();
-		
-		theView.setPredictionX(getPredictionX().toDouble());
+		setScatterplotForQuestion();
 		
 		permute(checkPermutation, random01);
 		
@@ -349,6 +342,22 @@ public class LsProblemsApplet extends ExerciseApplet {
 			problemCheck[i].setState(false);
 			
 		data.variableChanged("x");
+	}
+	
+	protected void setScatterplotForQuestion() {
+		updateScatterplotInfo();
+	}
+	
+	protected void updateScatterplotInfo() {
+		xAxis.readNumLabels(getDisplayXAxis());
+		xAxis.setAxisName(getXVarName());
+		xAxis.invalidate();
+		
+		yAxis.readNumLabels(getDisplayYAxis());
+		yNameLabel.setText(getYVarName());
+		yAxis.invalidate();
+		
+		theView.setPredictionX(getPredictionX().toDouble());
 	}
 	
 	protected void setDataForQuestion() {
@@ -410,6 +419,7 @@ public class LsProblemsApplet extends ExerciseApplet {
 				yVar.addValue(hasCurvature() ? yQuadVar.valueAt(n - 1) : yLinearVar.valueAt(n - 1));
 				break;
 		}
+		yVar.name = getYVarName();
 		
 		LinearModel lsModel = (LinearModel)data.getVariable("ls");
 		lsModel.setLSParams("y", 9, 9, 0);
@@ -509,10 +519,12 @@ public class LsProblemsApplet extends ExerciseApplet {
 					if (i < 3)
 						messagePanel.insertText("\n");
 				}
+				showScatterplot(messagePanel);		//		only used for external analysis version
 				break;
 			case ANS_CORRECT:
 				messagePanel.insertRedHeading("Good!\n");
 				messagePanel.insertText("You have identified the correct and wrong statements.");
+				showScatterplot(messagePanel);		//		only used for external analysis version
 				break;
 			case ANS_WRONG:
 				for (int i=0 ; i<4 ; i++) {
@@ -533,8 +545,12 @@ public class LsProblemsApplet extends ExerciseApplet {
 					if (i < 3)
 						messagePanel.insertText("\n");
 				}
+				showScatterplot(messagePanel);		//		only used for external analysis version
 				break;
 		}
+	}
+	
+	protected void showScatterplot(MessagePanel messagePanel) {
 	}
 	
 	private void insertExtrapolationError(MessagePanel messagePanel) {

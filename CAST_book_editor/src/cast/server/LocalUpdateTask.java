@@ -11,7 +11,7 @@ import cast.core.*;
 public class LocalUpdateTask extends CoreDownloadTask {
 	static final private int kNoOfStages = 6;
 	
-	static final private String kCastManagerName = "Start_CAST.jar";
+	static final private String kCastManagerName = "CAST.jar";
 	
 	private File castDir;
 	private LocalUpdateFrame updateFrame;

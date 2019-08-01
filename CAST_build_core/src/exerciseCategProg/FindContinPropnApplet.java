@@ -19,11 +19,11 @@ public class FindContinPropnApplet extends CoreContinApplet {
 	static final private int Y_MARGINAL_PROB = 3;
 	static final private int Y_CONDIT_PROB = 4;
 	
-	static final protected double kEps = 0.0005;
-	static final protected double kRoughEps = 0.005;
+//	static final protected double kEps = 0.0005;
+//	static final protected double kRoughEps = 0.005;
 	static final private int kPropnDecimals = 3;
 	
-	private PropnTemplatePanel propnTemplate;
+	protected PropnTemplatePanel propnTemplate;
 	
 //================================================
 	
@@ -34,6 +34,10 @@ public class FindContinPropnApplet extends CoreContinApplet {
 	
 	private int getProbType() {
 		return getIntParam("probType");
+	}
+	
+	protected int getRequiredDecimals() {
+		return kPropnDecimals;
 	}
 	
 	
@@ -91,7 +95,7 @@ public class FindContinPropnApplet extends CoreContinApplet {
 			case ANS_CLOSE:
 				messagePanel.insertRedHeading("Not close enough!\n");
 				messagePanel.insertText("Your answer is close, but try to specify the proportion correct to "
-																																		+ kPropnDecimals + " decimal digits.\n");
+																																		+ getRequiredDecimals() + " decimal digits.\n");
 				insertHelp(messagePanel);
 				break;
 			case ANS_WRONG:
@@ -101,7 +105,7 @@ public class FindContinPropnApplet extends CoreContinApplet {
 		}
 	}
 	
-	private void insertSolution(MessagePanel messagePanel) {
+	protected void insertSolution(MessagePanel messagePanel) {
 		CatVariable yVar = (CatVariable)data.getVariable("y");
 		CatVariable xVar = (CatVariable)data.getVariable("x");
 		int x = getCriticalX();
@@ -194,7 +198,7 @@ public class FindContinPropnApplet extends CoreContinApplet {
 	
 //-----------------------------------------------------------
 	
-	private int getCorrectNumerator() {
+	protected int getCorrectNumerator() {
 		CatVariable yVar = (CatVariable)data.getVariable("y");
 		CatVariable xVar = (CatVariable)data.getVariable("x");
 		int x = getCriticalX();
@@ -203,7 +207,8 @@ public class FindContinPropnApplet extends CoreContinApplet {
 			case JOINT_PROB:
 			case X_CONDIT_PROB:
 			case Y_CONDIT_PROB:
-				int[][] jointCounts = theTable.getCounts();
+				int[][] jointCounts = xVar.getCounts(yVar);
+//				int[][] jointCounts = theTable.getCounts();			//  changed since FindContinPropnExternalApplet does not display the table
 				return jointCounts[x][y];
 			case X_MARGINAL_PROB:
 				int[] xCounts = xVar.getCounts();
@@ -215,7 +220,7 @@ public class FindContinPropnApplet extends CoreContinApplet {
 		return 0;
 	}
 	
-	private int getCorrectDenominator() {
+	protected int getCorrectDenominator() {
 		CatVariable yVar = (CatVariable)data.getVariable("y");
 		CatVariable xVar = (CatVariable)data.getVariable("x");
 		int x = getCriticalX();
@@ -261,10 +266,17 @@ public class FindContinPropnApplet extends CoreContinApplet {
 			return ANS_INVALID;
 		else {
 			double correctPropn = getCorrect();
-			if (Math.abs(correctPropn - attemptPropn) <= kEps)
+			double factor = Math.pow(10.0, getRequiredDecimals());
+			if (Math.round(correctPropn * factor) == Math.round(attemptPropn * factor))
 				return ANS_CORRECT;
-			else
-				return (Math.abs(correctPropn - attemptPropn) <= kRoughEps) ? ANS_CLOSE : ANS_WRONG;
+			else {
+				factor /= 10.0;
+				return (Math.round(correctPropn * factor) == Math.round(attemptPropn * factor)) ? ANS_CLOSE : ANS_WRONG;
+			}
+//			if (Math.abs(correctPropn - attemptPropn) <= kEps)
+//				return ANS_CORRECT;
+//			else
+//				return (Math.abs(correctPropn - attemptPropn) <= kRoughEps) ? ANS_CLOSE : ANS_WRONG;
 		}
 	}
 	
@@ -273,7 +285,7 @@ public class FindContinPropnApplet extends CoreContinApplet {
 		
 		int numer = getCorrectNumerator();
 		int denom = getCorrectDenominator();
-		resultPanel.showAnswer(new NumValue(numer / (double)denom, kPropnDecimals));
+		resultPanel.showAnswer(new NumValue(numer / (double)denom, getRequiredDecimals()));
 		
 		if (propnTemplate != null)
 			propnTemplate.setValues(new NumValue(numer, 0), new NumValue(denom, 0));
@@ -283,7 +295,7 @@ public class FindContinPropnApplet extends CoreContinApplet {
 	
 	public boolean noteChangedWorking() {
 		boolean changed = super.noteChangedWorking();
-		if (changed) {
+		if (changed && theTable != null) {
 			theTable.clearPropnIndices();
 			theTable.repaint();
 		}

@@ -23,13 +23,13 @@ public class InterpretShapeApplet extends ExerciseApplet {
 	static final public int OUTLIER_NEG = 5;
 	static final public int CLUSTERS2 = 6;
 	
-	static final private String[] kShapeString = {"normal", "skewPos", "outlierPos", "clusters1", "skewNeg", "outlierNeg", "clusters2"};
+	static final protected String[] kShapeString = {"normal", "skewPos", "outlierPos", "clusters1", "skewNeg", "outlierNeg", "clusters2"};
 	
 	static final private double kMinWidthPropn = 0.8;
 	
 	private RandomContinuous generator;
 	
-	private HorizAxis theAxis;
+	protected HorizAxis theAxis;
 	private StackedDotPlotView theView;
 	
 	private ShapeChoicePanel shapeChoicePanel;
@@ -82,7 +82,7 @@ public class InterpretShapeApplet extends ExerciseApplet {
 		return getStringParam("varName");
 	}
 	
-	private int getShapeCode() {
+	protected int getShapeCode() {
 		return getIntParam("shapeValue");
 	}
 	
@@ -97,18 +97,7 @@ public class InterpretShapeApplet extends ExerciseApplet {
 		XPanel thePanel = new XPanel();
 		thePanel.setLayout(new BorderLayout(0, 4));
 		
-			XPanel dotPlotPanel = new XPanel();
-			dotPlotPanel.setLayout(new AxisLayout());
-			
-				theAxis = new HorizAxis(this);
-			dotPlotPanel.add("Bottom", theAxis);
-			
-				theView = new StackedDotPlotView(data, this, theAxis);
-				theView.setCrossSize(DataView.LARGE_CROSS);
-				theView.lockBackground(Color.white);
-			dotPlotPanel.add("Center", theView);
-			
-		thePanel.add("Center", dotPlotPanel);
+		thePanel.add("Center", getDataDisplayPanel());
 		
 			shapeChoicePanel = new ShapeChoicePanel(this, getShapeCode(), getOptionText());
 			registerStatusItem("shapeChoice", shapeChoicePanel);
@@ -117,18 +106,44 @@ public class InterpretShapeApplet extends ExerciseApplet {
 		return thePanel;
 	}
 	
-	protected void setDisplayForQuestion() {
-		theAxis.readNumLabels(getAxisInfo());
-		theAxis.setAxisName(getVarName());
-		theAxis.invalidate();
+	protected XPanel getDataDisplayPanel() {
+		return createPlot();
+	}
+	
+	protected XPanel createPlot() {
+		XPanel dotPlotPanel = new XPanel();
+		dotPlotPanel.setLayout(new AxisLayout());
 		
-		String yKey = kShapeString[getShapeCode()];
-		theView.setActiveNumVariable(yKey);
-		data.variableChanged(yKey);		//	clears selection
+			theAxis = new HorizAxis(this);
+		dotPlotPanel.add("Bottom", theAxis);
+		
+			theView = new StackedDotPlotView(data, this, theAxis);
+			theView.setCrossSize(DataView.LARGE_CROSS);
+			theView.lockBackground(Color.white);
+		dotPlotPanel.add("Center", theView);
+		return dotPlotPanel;
+	}
+	
+	protected void setDisplayForQuestion() {
+		updateDataDisplayPanel();
 		
 		shapeChoicePanel.changeOptions(getShapeCode(), getOptionText());
 		shapeChoicePanel.clearRadioButtons();
 		shapeChoicePanel.invalidate();
+	}
+	
+	protected void updateDataDisplayPanel() {
+		updatePlotVariable();
+	}
+	
+	protected void updatePlotVariable() {
+		theAxis.readNumLabels(getAxisInfo());
+		theAxis.setAxisName(getVarName());
+		theAxis.invalidate();
+
+		String yKey = kShapeString[getShapeCode()];
+		theView.setActiveNumVariable(yKey);
+		data.variableChanged(yKey);		//	clears selection
 	}
 	
 	protected void setDataForQuestion() {
@@ -186,6 +201,7 @@ public class InterpretShapeApplet extends ExerciseApplet {
 				break;
 			case ANS_TOLD:
 				messagePanel.insertRedHeading("Answer\n");
+				addPlotToMessage(messagePanel);
 				switch (getShapeCode()) {
 					case NORMAL:
 						messagePanel.insertText("The distribution is fairly symmetrical.");
@@ -209,12 +225,17 @@ public class InterpretShapeApplet extends ExerciseApplet {
 			case ANS_CORRECT:
 				messagePanel.insertRedHeading("Good!\n");
 				messagePanel.insertText("Your answer is correct.");
+				addPlotToMessage(messagePanel);
 				break;
 			case ANS_WRONG:
 				messagePanel.insertRedHeading("Wrong!\n");
+				addPlotToMessage(messagePanel);
 				messagePanel.insertRedText("No. " + shapeChoicePanel.getCorrectOptionMessage());
 				break;
 		}
+	}
+	
+	protected void addPlotToMessage(MessagePanel messagePanel) {		//  Only used by InterpretShapeExternalAnalysisApplet
 	}
 	
 	protected int getMessageHeight() {

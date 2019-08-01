@@ -52,19 +52,19 @@ public class TimeComponentsApplet extends ExerciseApplet {
 													"There are other patterns that are more prominent than random irregular variation."};
 	
 	
-	private XPanel timePanel;
-	private CardLayout timePanelLayout;
+	protected XPanel timePanel;
+	protected CardLayout timePanelLayout;
 	
-	private SeasonTimeAxis seasonTimeAxis;
-	private IndexTimeAxis indexTimeAxis;
-	private VertAxis ySeasonAxis, yIndexAxis;
+	protected SeasonTimeAxis seasonTimeAxis;
+	protected IndexTimeAxis indexTimeAxis;
+	protected VertAxis ySeasonAxis, yIndexAxis;
 	
 	private RandomNormal errorGenerator, autoCorrelGenerator;
 	private Random patternTypeGenerator;
 	
 	private int[] patterns;
 	
-	private XChoice[] componentChoice;
+	protected XChoice[] componentChoice;
 	
 //================================================
 	
@@ -103,20 +103,24 @@ public class TimeComponentsApplet extends ExerciseApplet {
 		registerParameter("seasonEffects", "string");
 	}
 	
-	private int getCount() {
+	protected int getCount() {
 		return getIntParam("count");
+	}
+	
+	protected int getYear0() {
+		return getIntParam("year0");
 	}
 	
 	private String getSeasonalLabelInfo() {
 		if (getCount() < 60)
-			return "0 1 " + getIntParam("year0") + " 1";		//	start with season 1 and label every season and year
+			return "0 1 " + getYear0() + " 1";		//	start with season 1 and label every season and year
 		else
-			return "0 0 " + getIntParam("year0") + " 1";		//	2nd value = 0 for no labels on seasons
+			return "0 0 " + getYear0() + " 1";		//	2nd value = 0 for no labels on seasons
 	}
 	
 	private String getYearLabelInfo() {
 		int nVals = getCount();
-		int year0 = getIntParam("year0");
+		int year0 = getYear0();
 		int labelPeriod = (nVals > 50) ? 10 : (nVals > 20) ? 5 : (nVals > 12) ? 2 : 1;
 		int labelStep = labelPeriod;
 		int firstValLabel = ((year0 + labelStep - 1) / labelStep) * labelStep;		//	round up
@@ -143,7 +147,7 @@ public class TimeComponentsApplet extends ExerciseApplet {
 		return seasonEffect;
 	}
 	
-	private int getNoOfSeasons() {
+	protected int getNoOfSeasons() {
 		StringTokenizer st = new StringTokenizer(getStringParam("seasonEffects"));
 		return st.countTokens();
 	}
@@ -161,7 +165,7 @@ public class TimeComponentsApplet extends ExerciseApplet {
 		return thePanel;
 	}
 	
-	private XPanel timeSeriesPanel(DataSet data) {
+	protected XPanel timeSeriesPanel(DataSet data) {
 		timePanel = new XPanel();
 		timePanelLayout = new CardLayout();
 		timePanel.setLayout(timePanelLayout);
@@ -172,7 +176,7 @@ public class TimeComponentsApplet extends ExerciseApplet {
 		return timePanel;
 	}
 	
-	private XPanel indexPanel(DataSet data) {
+	protected XPanel indexPanel(DataSet data) {
 		XPanel thePanel = new XPanel();
 		thePanel.setLayout(new AxisLayout());
 		
@@ -192,7 +196,7 @@ public class TimeComponentsApplet extends ExerciseApplet {
 		return thePanel;
 	}
 	
-	private XPanel seasonalPanel(DataSet data) {
+	protected XPanel seasonalPanel(DataSet data) {
 		XPanel thePanel = new XPanel();
 		thePanel.setLayout(new AxisLayout());
 		
@@ -212,7 +216,7 @@ public class TimeComponentsApplet extends ExerciseApplet {
 		return thePanel;
 	}
 	
-	private XPanel choicePanel(DataSet data) {
+	protected XPanel choicePanel(DataSet data) {
 		XPanel thePanel = new XPanel();
 		thePanel.setLayout(new VerticalLayout(VerticalLayout.CENTER));
 		
@@ -239,28 +243,14 @@ public class TimeComponentsApplet extends ExerciseApplet {
 	}
 	
 	protected void setDisplayForQuestion() {
-		int nVals = getCount();
 		int nSeasons = getNoOfSeasons();
 		
 		if (nSeasons == 1) {
-			indexTimeAxis.setNoOfVals(nVals);
-			indexTimeAxis.setTimeScale(getYearLabelInfo());
-			indexTimeAxis.invalidate();
-			
-			yIndexAxis.readNumLabels(getYAxisInfo());
-			yIndexAxis.invalidate();
-			
+			updateIndexPlotForQuestion();
 			timePanelLayout.show(timePanel, "index");
 		}
 		else {
-			seasonTimeAxis.setNoOfVals(nVals);
-				String seasonNames = (getNoOfSeasons() == 12) ? ("12 " + kMonthLabels) : ("4 " + kQuarterLabels);
-			seasonTimeAxis.setTimeScale(seasonNames, getSeasonalLabelInfo());
-			seasonTimeAxis.invalidate();
-			
-			ySeasonAxis.readNumLabels(getYAxisInfo());
-			ySeasonAxis.invalidate();
-			
+			updateSeasonalPlotForQuestion();
 			timePanelLayout.show(timePanel, "seasonal");
 		}
 		
@@ -268,6 +258,27 @@ public class TimeComponentsApplet extends ExerciseApplet {
 			componentChoice[i].select(0);
 		
 		validate();
+	}
+	
+	protected void updateIndexPlotForQuestion() {
+		int nVals = getCount();
+		indexTimeAxis.setNoOfVals(nVals);
+		indexTimeAxis.setTimeScale(getYearLabelInfo());
+		indexTimeAxis.invalidate();
+		
+		yIndexAxis.readNumLabels(getYAxisInfo());
+		yIndexAxis.invalidate();
+	}
+	
+	protected void updateSeasonalPlotForQuestion() {
+		int nVals = getCount();
+		seasonTimeAxis.setNoOfVals(nVals);
+		String seasonNames = (getNoOfSeasons() == 12) ? ("12 " + kMonthLabels) : ("4 " + kQuarterLabels);
+		seasonTimeAxis.setTimeScale(seasonNames, getSeasonalLabelInfo());
+		seasonTimeAxis.invalidate();
+		
+		ySeasonAxis.readNumLabels(getYAxisInfo());
+		ySeasonAxis.invalidate();
 	}
 	
 //-----------------------------------------------------------
@@ -591,6 +602,7 @@ public class TimeComponentsApplet extends ExerciseApplet {
 				messagePanel.insertRedHeading("Answer");
 				for (int i=0 ; i<2 ; i++)
 					messagePanel.insertText("\n" + kPatternAnswer[patterns[i]]);
+				insertGraph(messagePanel);
 				break;
 			case ANS_CORRECT:
 				messagePanel.insertRedHeading("Good!");
@@ -599,6 +611,7 @@ public class TimeComponentsApplet extends ExerciseApplet {
 					messagePanel.insertText("\nYes. " + kPatternAnswer[patterns[1]]);
 				else
 					messagePanel.insertText("\nThe other component is actually random not cyclical, but it is very difficult to distinguish these if there is a seasonal pattern.");
+				insertGraph(messagePanel);
 				break;
 			case ANS_CLOSE:
 				messagePanel.insertRedHeading("Close!");
@@ -606,6 +619,7 @@ public class TimeComponentsApplet extends ExerciseApplet {
 				messagePanel.insertRedText("\nThe other component is actually "
 									+ ((patterns[1] == 4) ? "cyclical not random" : "random not cyclical")
 									+ ", but it is often difficult to distinguish between random and cyclical components.");
+				insertGraph(messagePanel);
 				break;
 			case ANS_WRONG:
 				messagePanel.insertRedHeading("Wrong!\n");
@@ -616,6 +630,9 @@ public class TimeComponentsApplet extends ExerciseApplet {
 						messagePanel.insertRedText("\n" + kPatternError[menuChoices[i]]);
 				break;
 		}
+	}
+	
+	protected void insertGraph(MessagePanel messagePanel) {			//  only used for external analysis version
 	}
 	
 	protected int getMessageHeight() {

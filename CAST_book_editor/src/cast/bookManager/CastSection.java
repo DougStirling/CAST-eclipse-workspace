@@ -2,6 +2,8 @@ package cast.bookManager;
 
 import java.awt.event.*;
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URLDecoder;
 
 import javax.swing.*;
 import javax.swing.event.*;
@@ -89,6 +91,7 @@ public class CastSection {
 				DOMSource domSource = new DOMSource(sectionDomDocument);
 				File xmlFile = castEbook.getXmlFile(dir, filePrefix);
 				StreamResult streamResult = new StreamResult(xmlFile);
+				streamResult.setSystemId(URLDecoder.decode(xmlFile.toURI().toURL().toString(), "UTF-8"));		//  Needed to deal with spaces in file path
 				TransformerFactory tf = TransformerFactory.newInstance();
 				Transformer serializer = tf.newTransformer();
 				serializer.setOutputProperty(OutputKeys.ENCODING,"UTF-8");
@@ -102,6 +105,12 @@ public class CastSection {
 		} catch (TransformerException transformerError) {
 			System.err.println("Error transforming document");
 			transformerError.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			System.err.println("Error creating URL");
+			e.printStackTrace();
+		} catch (MalformedURLException e) {
+			System.err.println("Error creating URL");
+			e.printStackTrace();
 		}
 	}
 	

@@ -19,8 +19,10 @@ public class MatchDistnApplet extends CoreMatchApplet {
 	static final private double kMinWidthPropn = 0.8;
 	
 	private DistnGenerator generator[];
+	protected String yKeys[];
 	
-	private HorizAxis leftAxis, rightAxis;
+	private HorizAxis rightAxis;
+	protected HorizAxis leftAxis;
 	private MultipleDistnView leftPlots, rightPlots;
 	
 	protected void createDisplay() {
@@ -65,7 +67,7 @@ public class MatchDistnApplet extends CoreMatchApplet {
 		return getStringParam("axis");
 	}
 	
-	protected String getVarName() {
+	protected String getVarName() {		// used as name when data set is exported and to label common axis
 		return getStringParam("varName");
 	}
 	
@@ -111,23 +113,25 @@ public class MatchDistnApplet extends CoreMatchApplet {
 	}
 	
 	protected XPanel addLeftItems(XPanel thePanel, int[] leftOrder) {
-			XPanel dotPanel = new XPanel();
-			dotPanel.setLayout(new AxisLayout());
-			
-				leftAxis = new HorizAxis(this);
-			dotPanel.add("Bottom", leftAxis);
-			
-//				String[] yKeys = getYKeys();
-				int leftDisplayType = hasOption("histogram") ? MultipleDistnView.HISTOGRAM
-																										: MultipleDistnView.STACKED_DOT_PLOT;
-				leftPlots = new MultipleDistnView(data, this, leftAxis, getYKeys(), leftOrder, leftDisplayType);
-				leftPlots.lockBackground(Color.white);
-				registerStatusItem("leftOrder", leftPlots);
-			dotPanel.add("Center", leftPlots);
-			
-		thePanel.add(ProportionLayout.LEFT, dotPanel);
+		XPanel dotPanel = new XPanel();
+		dotPanel.setLayout(new AxisLayout());
 		
+			leftAxis = new HorizAxis(this);
+		dotPanel.add("Bottom", leftAxis);
+			
+			leftPlots = createLeftDisplay(leftOrder);
+			leftPlots.lockBackground(Color.white);
+			registerStatusItem("leftOrder", leftPlots);
+		dotPanel.add("Center", leftPlots);
+		
+		thePanel.add(ProportionLayout.LEFT, dotPanel);
 		return dotPanel;
+	}
+	
+	protected MultipleDistnView createLeftDisplay(int[] leftOrder) {
+		int leftDisplayType = hasOption("histogram") ? MultipleDistnView.HISTOGRAM
+				: MultipleDistnView.STACKED_DOT_PLOT;
+		return new MultipleDistnView(data, this, leftAxis, null, leftOrder, leftDisplayType);
 	}
 	
 	protected XPanel addRightItems(XPanel thePanel, int[] rightOrder) {
@@ -137,9 +141,7 @@ public class MatchDistnApplet extends CoreMatchApplet {
 				rightAxis = new HorizAxis(this);
 			boxPanel.add("Bottom", rightAxis);
 			
-				int rightDisplayType = hasOption("boxplot") ? MultipleDistnView.BOX_PLOT
-																										: MultipleDistnView.CUM_DISTN;
-				rightPlots = new MultipleDistnView(data, this, rightAxis, getYKeys(), rightOrder, rightDisplayType);
+				rightPlots = new MultipleDistnView(data, this, rightAxis, null, rightOrder, getRightDisplayType());
 				rightPlots.lockBackground(Color.white);
 				registerStatusItem("rightOrder", rightPlots);
 			boxPanel.add("Center", rightPlots);
@@ -149,10 +151,14 @@ public class MatchDistnApplet extends CoreMatchApplet {
 		return boxPanel;
 	}
 	
+	protected int getRightDisplayType() {
+		return hasOption("boxplot") ? MultipleDistnView.BOX_PLOT : MultipleDistnView.CUM_DISTN;
+	}
+	
 	
 //-----------------------------------------------------------
 	
-	private String[] getYKeys() {
+	protected String[] getNewYKeys() {
 		String yKeys[] = new String[kNDisplayedDistns];
 		if (generator.length == kNDisplayedDistns)
 			for (int i=0 ; i<kNDisplayedDistns ; i++)
@@ -176,7 +182,8 @@ public class MatchDistnApplet extends CoreMatchApplet {
 	protected void setDisplayForQuestion() {
 		super.setDisplayForQuestion();
 		
-		String yKeys[] = getYKeys();
+		yKeys = getNewYKeys();
+		
 		double classLimits[] = getClassLimits();
 		
 		leftAxis.readNumLabels(getAxisInfo());
@@ -232,25 +239,33 @@ public class MatchDistnApplet extends CoreMatchApplet {
 //-----------------------------------------------------------
 	
 	protected void insertMessageContent(MessagePanel messagePanel) {
-		String displayString = hasOption("boxplot") ? "box plot"
-														: hasOption("boxplot") ? "histogram" : "cumulative distribution";
+		String leftDisplayString = leftDisplayString();
+		String rightDisplayString = rightDisplayString();
 		switch (result) {
 			case ANS_UNCHECKED:
-				messagePanel.insertText("Reorder the " + displayString + "s (or stacked dot plots) by dragging so that each " + displayString + " corresponds to the dot plot on its left.");
+				messagePanel.insertText("Reorder the " + rightDisplayString + "s by dragging so that each matches the " + leftDisplayString + " on its left.");
 				break;
 			case ANS_TOLD:
 				messagePanel.insertRedHeading("Answer\n");
-				messagePanel.insertText("The correct matching of " + displayString + "s and stacked dot plots is shown.");
+				messagePanel.insertText("The correct matching of " + rightDisplayString + "s and " + leftDisplayString + "s is shown.");
 				break;
 			case ANS_CORRECT:
 				messagePanel.insertRedHeading("Good!\n");
-				messagePanel.insertText("You have correctly matched up the " + displayString + "s with the stacked dot plots of the data sets.");
+				messagePanel.insertText("You have correctly matched up the " + rightDisplayString + "s with the " + leftDisplayString + "s of the data sets.");
 				break;
 			case ANS_WRONG:
 				messagePanel.insertRedHeading("Wrong!\n");
-				messagePanel.insertText("The red arrows indicate " + displayString + "s that do not correspond to the stacked dot plots on their left.");
+				messagePanel.insertText("The red arrows indicate " + rightDisplayString + "s that do not correspond to the " + leftDisplayString + "s on their left.");
 				break;
 		}
+	}
+	
+	protected String leftDisplayString() {
+		return hasOption("histogram") ? "histogram" : "stacked dot plot";
+	}
+	
+	protected String rightDisplayString() {
+		return hasOption("boxplot") ? "box plot" : "cumulative distribution";
 	}
 	
 	protected int getMessageHeight() {

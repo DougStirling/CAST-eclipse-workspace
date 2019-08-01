@@ -158,10 +158,6 @@ public class SlopeStdErrorApplet extends FindResidualApplet {
 	
 //-----------------------------------------------------------
 	
-	private double getAttempt() {
-		return resultPanel.getAttempt().toDouble();
-	}
-	
 	private NumValue getSe() {
 		LinearModel ls = (LinearModel)data.getVariable("ls");
 		double slopeSe = ls.getSeSlope();

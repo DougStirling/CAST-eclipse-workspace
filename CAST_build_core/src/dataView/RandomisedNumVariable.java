@@ -7,6 +7,7 @@ public class RandomisedNumVariable extends NumVariable implements SampleInterfac
 	protected Random generator = new Random();
 	private long currentSeed, nextSeed;
 	private int map[];
+	private int nValues = -1;		// if nValues > 0, variable exposes a random subset of values
 	
 	public RandomisedNumVariable(String theName) {
 		super(theName);
@@ -49,7 +50,8 @@ public class RandomisedNumVariable extends NumVariable implements SampleInterfac
 			map[i] = i;
 	}
 	
-	public void setSampleSize(int n) {		//	makes no sense
+	public void setSampleSize(int n) {
+		nValues = n;
 	}
 	
 	public long generateNextSample() {
@@ -94,6 +96,10 @@ public class RandomisedNumVariable extends NumVariable implements SampleInterfac
 	
 	public void setMap(int[] map) {
 		this.map = map;
+	}
+	
+	public int noOfValues() {
+		return (nValues < 0) ? super.noOfValues() : nValues;
 	}
 	
 	public ValueEnumeration values() {

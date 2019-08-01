@@ -42,11 +42,11 @@ public class NormalZProbApplet extends CoreNormalProbApplet {
 				case ANS_TOLD:
 					messagePanel.insertRedHeading("Answer\n");
 					messagePanel.insertText("The template shows how to find a z-score. ");
-					messagePanel.insertText("The expected value is " + n + " times the area under the standard normal curve " + zLimits.areaAnswerString() + ".");
+					messagePanel.insertText("The expected value is " + n + " times the " + zLimits.areaAnswerString() + " under the standard normal curve.");
 					break;
 				case ANS_CORRECT:
 					messagePanel.insertRedHeading("Correct!\n");
-					messagePanel.insertText("The expected value is " + n + " times the area under the standard normal curve " + zLimits.areaAnswerString() + ".");
+					messagePanel.insertText("The expected value is " + n + " times the " + zLimits.areaAnswerString() + " under the standard normal curve.");
 					break;
 				case ANS_CLOSE:
 					messagePanel.insertRedHeading("Good!\n");
@@ -74,11 +74,11 @@ public class NormalZProbApplet extends CoreNormalProbApplet {
 				case ANS_TOLD:
 					messagePanel.insertRedHeading("Answer\n");
 					messagePanel.insertText("The template shows how to find a z-score. ");
-					messagePanel.insertText("The answer is the area under the standard normal curve " + zLimits.areaAnswerString() + ".");
+					messagePanel.insertText("The answer is the " + zLimits.areaAnswerString() + " under the standard normal curve.");
 					break;
 				case ANS_CORRECT:
 					messagePanel.insertRedHeading("Correct!\n");
-					messagePanel.insertText("This probability is the area under the standard normal curve " + zLimits.areaAnswerString() + ".");
+					messagePanel.insertText("This probability is the " + zLimits.areaAnswerString() + " under the standard normal curve.");
 					break;
 				case ANS_CLOSE:
 					messagePanel.insertRedHeading("Good!\n");

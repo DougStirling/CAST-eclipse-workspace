@@ -36,6 +36,14 @@ public class Edit extends FormulaPanel {
 		return editField.getNumValue();
 	}
 	
+	public boolean isClear() {
+		return editField.isClear();
+	}
+	
+	public void setClear() {
+		editField.clearValue();
+	}
+	
 	protected boolean initialise(Graphics g) {
 		if (super.initialise(g)) {
 			Dimension prefEditSize = editField.getPreferredSize();

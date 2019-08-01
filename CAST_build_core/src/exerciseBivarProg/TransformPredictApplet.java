@@ -18,8 +18,8 @@ import exerciseBivar.*;
 
 
 public class TransformPredictApplet extends ExerciseApplet {
-	static final private int IDENTITY_TRANS = 0;
-	static final private int LOG_TRANS = 1;
+	static final protected int IDENTITY_TRANS = 0;
+	static final protected int LOG_TRANS = 1;
 	
 	static final private NumValue kMaxLnValue = new NumValue(-9.0, 3);
 	static final private NumValue kOneValue = new NumValue(1, 0);
@@ -36,7 +36,7 @@ public class TransformPredictApplet extends ExerciseApplet {
 	private VertAxis yAxis, yTransAxis;
 	private ScatterView xyView, xyTransView;
 	
-	private LinearEquationView lsEqn;
+	protected LinearEquationView lsEqn;
 	
 	private FunctionEvalTemplatePanel lnTemplate, expTemplate;
 	private FittedValTemplatePanel linearTemplate;
@@ -92,7 +92,7 @@ public class TransformPredictApplet extends ExerciseApplet {
 		registerParameter("accuracy", "const");
 	}
 	
-	private String getXVarName() {
+	protected String getXVarName() {
 		return getStringParam("xVarName");
 	}
 	
@@ -104,7 +104,7 @@ public class TransformPredictApplet extends ExerciseApplet {
 		return getStringParam("lnxAxis");
 	}
 	
-	private String getYVarName() {
+	protected String getYVarName() {
 		return getStringParam("yVarName");
 	}
 	
@@ -124,15 +124,15 @@ public class TransformPredictApplet extends ExerciseApplet {
 		return getNumValueParam("corr");
 	}
 	
-	private int getXTransformType() {
+	protected int getXTransformType() {
 		return getIntParam("transformType") / 2;
 	}
 	
-	private int getYTransformType() {
+	protected int getYTransformType() {
 		return getIntParam("transformType") % 2;
 	}
 	
-	private NumValue getXValue() {
+	protected NumValue getXValue() {
 		return getNumValueParam("xValue");
 	}
 	
@@ -217,7 +217,7 @@ public class TransformPredictApplet extends ExerciseApplet {
 		return thePanel;
 	}
 	
-	private XPanel getDataPanels(DataSet data) {
+	protected XPanel getDataPanels(DataSet data) {
 		XPanel thePanel = new XPanel();
 		thePanel.setLayout(new ProportionLayout(0.5, 0));
 			
@@ -294,13 +294,15 @@ public class TransformPredictApplet extends ExerciseApplet {
 		lsEqn.invalidate();
 		lsEqn.repaint();
 		
-		lnTemplate.setXValue(kOneValue);
-		
-		expTemplate.setXValue(kZeroValue);
-		
-		linearTemplate.setValues(kZeroValue, kZeroValue, kZeroValue);
+		clearTemplates();
 		
 		resultPanel.clear();
+	}
+	
+	protected void clearTemplates() {
+		lnTemplate.setXValue(kOneValue);
+		expTemplate.setXValue(kZeroValue);
+		linearTemplate.setValues(kZeroValue, kZeroValue, kZeroValue);
 	}
 	
 	private String getExplanName() {
@@ -430,7 +432,7 @@ public class TransformPredictApplet extends ExerciseApplet {
 		}
 	}
 	
-	private void insertHelpMessage(MessagePanel messagePanel) {
+	protected void insertHelpMessage(MessagePanel messagePanel) {
 		if (getXTransformType() == IDENTITY_TRANS && getYTransformType() == IDENTITY_TRANS) {
 			messagePanel.insertText("\nMake sure that you did ");
 			messagePanel.insertBoldText("not");
@@ -501,7 +503,7 @@ public class TransformPredictApplet extends ExerciseApplet {
 	
 //-----------------------------------------------------------
 	
-	private double getAttempt() {
+	protected double getAttempt() {
 		return resultPanel.getAttempt().toDouble();
 	}
 	

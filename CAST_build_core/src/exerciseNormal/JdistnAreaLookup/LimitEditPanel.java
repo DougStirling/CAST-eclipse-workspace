@@ -13,6 +13,7 @@ public class LimitEditPanel extends XPanel {
 	private CoreLookupPanel normalPanel;
 	
 	private XNumberEditPanel lowEdit, highEdit;
+	private boolean canEdit = true;
 	
 	public LimitEditPanel(XApplet applet, DataSet data, String distnKey,
 																				CoreLookupPanel normalPanel, boolean highAndLow) {
@@ -98,6 +99,14 @@ public class LimitEditPanel extends XPanel {
 			highEdit.setDoubleValue(highVal);
 	}
 	
+	public void setCanEdit(boolean canEdit) {
+		this.canEdit = canEdit;
+		if (lowEdit != null)
+			lowEdit.setEnabled(canEdit);
+		if (highEdit != null)
+			highEdit.setEnabled(canEdit);
+	}
+	
 	public void noteChanged() {
 		normalPanel.noteChanged();
 	}
@@ -117,6 +126,8 @@ public class LimitEditPanel extends XPanel {
 	}
 	
 	private boolean localAction(Object target, Object arg) {
+		if (!canEdit)
+			return false;
 		if (arg != null) {
 			normalPanel.setPending(target != highEdit, ((Boolean)arg).booleanValue());
 			data.variableChanged(distnKey);

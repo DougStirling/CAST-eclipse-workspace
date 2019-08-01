@@ -173,6 +173,10 @@ abstract public class MessagePanel extends XPanel {
 		textPane.insertMenu(choice);
 	}
 	
+	public void insertGraph(XPanel graph) {
+		textPane.insertGraph(graph);
+	}
+	
 	public void setAlignment(boolean leftNotCentre) {
 		textPane.setAlignment(leftNotCentre);
 	}

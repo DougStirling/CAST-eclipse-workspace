@@ -14,6 +14,8 @@ abstract public class CoreMatchApplet extends ExerciseApplet {
 	
 	private boolean correct[] = null;
 	
+	private boolean fixedLeftOrder = false;
+	
 	private double arrowPropn = 0.333333;	//	proportion from bottom of item rect for arrow centre
 	
 	abstract protected int noOfItems();
@@ -25,6 +27,10 @@ abstract public class CoreMatchApplet extends ExerciseApplet {
 	
 	public void setArrowPropn(double p) {
 		arrowPropn = p;
+	}
+	
+	protected void setFixedLeftOrder(boolean fixedLeftOrder) {
+		this.fixedLeftOrder = fixedLeftOrder;
 	}
 	
 	private int[] initialOrdering() {
@@ -57,7 +63,8 @@ abstract public class CoreMatchApplet extends ExerciseApplet {
 				super.paintComponent(g);
 				int dotPlotHeight = getDragMatchHeight();
 				int arrowBandLeft = leftPanel.getSize().width;
-				int arrowBandRight = rightPanel.getLocation().x;
+				int arrowBandRight = (rightPanel.getParent() == workingPanel) ? rightPanel.getLocation().x : rightPanel.getParent().getLocation().x;
+																												//  rightPanel might be inside an AxisLayout on the right, making its x-location zero
 				int left = arrowBandLeft + (arrowBandRight - arrowBandLeft - 14) / 2;
 				
 				xPos[0] = xPos[6] = xPos[7] = left;
@@ -100,7 +107,8 @@ abstract public class CoreMatchApplet extends ExerciseApplet {
 	
 	protected void setDisplayForQuestion() {
 		do {
-			randomiseOrdering(leftOrder);
+			if (!fixedLeftOrder)
+				randomiseOrdering(leftOrder);
 			randomiseOrdering(rightOrder);
 		} while (sameOrdering(leftOrder, rightOrder));
 		

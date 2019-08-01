@@ -83,7 +83,7 @@ public class UpdateServerFrame extends JFrame {
 				
 				JPanel buttonPanel = new JPanel();
 				buttonPanel.setLayout(new VerticalLayout(VerticalLayout.CENTER, 0));
-					noManagerCheck = new JCheckBox("Ignore changes to Start_CAST.jar");
+					noManagerCheck = new JCheckBox("Ignore changes to CAST.jar");
 					noManagerCheck.setSelected(true);
 				buttonPanel.add(noManagerCheck);
 					noCoreJavaCheck = new JCheckBox("Ignore changes to coreCAST.jar");

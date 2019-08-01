@@ -363,7 +363,10 @@ abstract public class ExerciseApplet extends XApplet implements ExerciseConstant
 	}
 	
 	public boolean getBooleanParam(String name) {
-		return ((Boolean)getObjectParam(name)).booleanValue();
+		Boolean param = (Boolean)getObjectParam(name);
+		if (param == null)
+			return false;
+		return param.booleanValue();
 	}
 	
 	protected Object[] cloneParameters() {

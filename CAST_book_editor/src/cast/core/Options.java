@@ -1,11 +1,9 @@
 package cast.core;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.*;
+import java.net.*;
 
 import javax.swing.*;
 import javax.swing.border.*;
@@ -28,7 +26,13 @@ public class Options extends JDialog {
 																								//
 																								//	Must be true to edit core variations of exercises.
 
-	static public String kCastInstallerUrl = null, kCastDownloadUrl = null, kCastUploadServer = null, kCastUploadPath = null, kHelpPath = null;
+	static public String kCastDownloadUrl = null;
+	static public String kCastUploadServer = null;
+	static public String kCastUploadPath = null;
+	static public String kUploadServerType = null;
+	
+	static public String kCastInstallerUrl = null;
+	static public String kHelpPath = null;
 /*
 	static private int kRelease = 0, kBeta = 1, kAlpha = 2;
 	static private int kVersion = kRelease;
@@ -79,11 +83,16 @@ public class Options extends JDialog {
 			
 			Element documentElement = settingsDomDocument.getDocumentElement();
 			
-			kCastInstallerUrl = getSelectedPath("installersPaths", documentElement);
-			kCastDownloadUrl = getSelectedPath("downloadsPaths", documentElement);
-			kCastUploadServer = getSelectedPath("uploadFtpServers", documentElement);
-			kCastUploadPath = getSelectedPath("uploadFtpPaths", documentElement);
-			kHelpPath = getSelectedPath("helpPaths", documentElement);
+				Element castElement = getSelectedElement("serverPaths", "serverPath", documentElement);
+			kCastDownloadUrl = castElement.getAttribute("httpAddress");
+			kCastUploadServer = castElement.getAttribute("ftpServer");
+			kCastUploadPath = castElement.getAttribute("ftpPath");
+			kUploadServerType = castElement.getAttribute("type");
+			
+				Element installerElement = getSelectedElement("installersPaths", "path", documentElement);
+			kCastInstallerUrl = installerElement.getAttribute("address");
+				Element helpElement = getSelectedElement("helpPaths", "path", documentElement);
+			kHelpPath = helpElement.getAttribute("address");
 			
 		} catch(ParserConfigurationException e) {
 			System.err.println("Error opening settings file.\n" + e);
@@ -107,7 +116,7 @@ public class Options extends JDialog {
 		return collectionFile.length > 1;
 	}
 	
-	static private String getSelectedPath(String pathType, Element domElement) {
+	static private Element getSelectedElement(String pathType, String pathElementType, Element domElement) {
 		NodeList nl = domElement.getElementsByTagName(pathType);
 		Element pathElement = null;
 		for (int i=0 ; i<nl.getLength() ; i++)
@@ -115,15 +124,14 @@ public class Options extends JDialog {
 				pathElement = (Element)nl.item(i);
 		
 		if (pathElement != null) {		//		there should always be at least one tag of this type
-			NodeList pathList = pathElement.getElementsByTagName("path");
+			NodeList pathList = pathElement.getElementsByTagName(pathElementType);
 			for (int i=0 ; i<pathList.getLength() ; i++) {
 				Node n = pathList.item(i);
 				if (n.getNodeType() == Node.ELEMENT_NODE) {
 					Element e = (Element)n;
-					String path = e.getAttribute("address");
 					boolean selected = Boolean.valueOf(e.getAttribute("selected"));
 					if (selected)
-						return path;
+						return e;
 				}
 			}
 		}
@@ -137,10 +145,8 @@ public class Options extends JDialog {
 	
 	private File settingsFile;
 	private Document settingsDomDocument;
+	private Element[] servers;
 	private Element[] installerPaths;
-	private Element[] downloadPaths;
-	private Element[] uploadServers;
-	private Element[] uploadPaths;
 	private Element[] helpPaths;
 	
 	private JButton saveButton;
@@ -151,7 +157,7 @@ public class Options extends JDialog {
 		readPaths(coreDir);
 		
 		setLayout(new BorderLayout(0, 0));
-			JTextArea instructions = new JTextArea("The settings in this dialog box can be used to change the external servers that CAST uses.\n\nThey will not take effect until the next time CAST is started.");
+			JTextArea instructions = new JTextArea("The settings in this dialog box can be used to change the external servers that CAST uses.\n");
 			instructions.setLineWrap(true);
 			instructions.setWrapStyleWord(true);
 			instructions.setEditable(false);
@@ -179,13 +185,11 @@ public class Options extends JDialog {
 			JPanel mainPanel = new JPanel();
 			mainPanel.setOpaque(true);
 			mainPanel.setLayout(new VerticalLayout(VerticalLayout.FILL, VerticalLayout.VERT_SPACED, 5));
-			mainPanel.add(settingPanel(downloadPaths, "This choice affects the server from which CAST will look for updates.", "Update server:", saveButton));
-			mainPanel.add(settingPanel(helpPaths, "This choice determines where CAST will look for some HTML help files.", "Help files:", saveButton));
+			mainPanel.add(settingPanel(servers, "httpAddress", "type", "This choice affects the server from which CAST will look for updates. Administrators can also upload to this server.", "Update server:", saveButton));
+			mainPanel.add(settingPanel(helpPaths, "address", null, "This choice determines where CAST will look for some HTML help files.", "Help files:", saveButton));
 			if (hasMultipleCollections) {
-				mainPanel.add(settingPanel(installerPaths, "This choice affects where the web version of CAST will look for installers."
+				mainPanel.add(settingPanel(installerPaths, "address", null, "This choice affects where the web version of CAST will look for installers."
 						+ " It will only be used after CAST the server version of CAST is updated.", "Installer location:", saveButton));
-				mainPanel.add(settingPanel(uploadServers, "This is the FTP server that CAST will use when uploading changes.", "FTP server:", saveButton));
-				mainPanel.add(settingPanel(uploadPaths, "This is the path within the FTP server where the uploaded version of CAST is located.", "FTP path:", saveButton));
 			}
 			
 		add("Center", mainPanel);
@@ -215,7 +219,7 @@ public class Options extends JDialog {
 //		saveButton.setEnabled(true);
 	}
 	
-	private JPanel settingPanel(final Element[] paths, String choiceDescription, String choiceLabel, final JButton saveButton) {
+	private JPanel settingPanel(final Element[] paths, String addressKey, String typeKey, String choiceDescription, String choiceLabel, final JButton saveButton) {
 		JPanel thePanel = new JPanel();
 		thePanel.setLayout(new BorderLayout(0, 0));
 		
@@ -227,9 +231,34 @@ public class Options extends JDialog {
 				JLabel label = new JLabel(choiceLabel, JLabel.LEFT);
 			mainPanel.add(label);
 				final JComboBox choice = new JComboBox();
+				int selectedItem = 0;
 				for (int i=0 ; i<paths.length ; i++) {
-					String path = paths[i].getAttribute("address");
+					String path = paths[i].getAttribute(addressKey);
+					if (typeKey != null)
+						try {
+							String versionType = paths[i].getAttribute(typeKey);
+							String server = "http://" + path + "/" + "versions.text";
+							URL versionUrl = new URL(server);
+							BufferedReader in = new BufferedReader(new InputStreamReader(versionUrl.openStream()));
+
+							String versionString = in.readLine();
+							int versionNo = Integer.valueOf(versionString);
+							int v1 = versionNo / 1000000;
+							int v2 = (versionNo % 1000000) / 10000;
+							int v3 = versionNo % 1000;
+							String versionNumberString = v1 + "." + v2;
+							if (v3 > 0)
+								versionNumberString += "." + v3;
+							path += " (" + versionType + " " + versionNumberString + ")";
+							in.close();
+						} catch (MalformedURLException e) {
+							System.err.println("MalformedURLException " + e);
+						} catch (IOException e) {
+							System.err.println("IOException " + e);
+						}
 					choice.addItem(path);
+					if (Boolean.valueOf(paths[i].getAttribute("selected")))
+						selectedItem = i;
 				}
 				choice.addActionListener(new ActionListener() {
 														public void actionPerformed(ActionEvent e) {
@@ -237,6 +266,7 @@ public class Options extends JDialog {
 															saveButton.setEnabled(true);
 														}
 												});
+				choice.setSelectedIndex(selectedItem);
 			mainPanel.add(choice);
 		thePanel.add("Center", mainPanel);
 		thePanel.setPreferredSize(new Dimension(500, 110));
@@ -262,11 +292,9 @@ public class Options extends JDialog {
 			
 			Element documentElement = settingsDomDocument.getDocumentElement();
 			
-			installerPaths = readPaths("installersPaths", documentElement);
-			downloadPaths = readPaths("downloadsPaths", documentElement);
-			uploadServers = readPaths("uploadFtpServers", documentElement);
-			uploadPaths = readPaths("uploadFtpPaths", documentElement);
-			helpPaths = readPaths("helpPaths", documentElement);
+			servers = readPaths("serverPaths", "serverPath", documentElement);
+			installerPaths = readPaths("installersPaths", "path", documentElement);
+			helpPaths = readPaths("helpPaths", "path", documentElement);
 			
 		} catch(ParserConfigurationException e) {
 			System.err.println("Error opening settings file.\n" + e);
@@ -280,29 +308,24 @@ public class Options extends JDialog {
 		}
 	}
 	
-	private Element[] readPaths(String pathType, Element domElement) {
-		NodeList nl = domElement.getElementsByTagName(pathType);
-		Element pathElement = null;
-		for (int i=0 ; i<nl.getLength() ; i++)
-			if (nl.item(i).getNodeType() == Node.ELEMENT_NODE)
-				pathElement = (Element)nl.item(i);
-		if (pathElement != null) {		//		there should always be at least one tag of this type
-			NodeList pathList = pathElement.getElementsByTagName("path");
-			int nPaths = 0;
-			for (int i=0 ; i<pathList.getLength() ; i++)
-				if (pathList.item(i).getNodeType() == Node.ELEMENT_NODE)
-					nPaths ++;
-			
-			Element[] paths = new Element[nPaths];
-			nPaths = 0;
-			for (int i=0 ; i<pathList.getLength() ; i++) {
-				Node n = pathList.item(i);
-				if (n.getNodeType() == Node.ELEMENT_NODE)
-					paths[nPaths ++] = (Element)n;
-			}
-			return paths;
+	private Element[] readPaths(String pathType, String pathElementType, Element domElement) {
+		Element pathElement = XmlHelper.getUniqueTag(domElement, pathType);
+
+		NodeList pathList = pathElement.getElementsByTagName(pathElementType);
+		int nPaths = 0;
+		for (int i=0 ; i<pathList.getLength() ; i++) {
+			if (pathList.item(i).getNodeType() == Node.ELEMENT_NODE)
+				nPaths ++;
 		}
-		return null;		//		should never happen since one path should be selected
+		
+		Element[] paths = new Element[nPaths];
+		nPaths = 0;
+		for (int i=0 ; i<pathList.getLength() ; i++) {
+			Node n = pathList.item(i);
+			if (n.getNodeType() == Node.ELEMENT_NODE)
+				paths[nPaths ++] = (Element)n;
+		}
+		return paths;
 	}
 	
 	private void selectPath(Element[] paths, int index) {
@@ -312,7 +335,28 @@ public class Options extends JDialog {
 		}
 	}
 	
+	private Element getSelectedElement(Element[] elements) {
+		for (int i=0 ; i<elements.length ; i++) {
+			String selectedString = elements[i].getAttribute("selected");
+			if (Boolean.valueOf(selectedString))
+				return elements[i];
+		}
+		return null;		//		should never happen
+	}
+	
 	private void savePaths() {
+		Element selectedServer = getSelectedElement(servers);
+		kCastDownloadUrl = selectedServer.getAttribute("httpAddress");
+		kCastUploadServer = selectedServer.getAttribute("ftpServer");
+		kCastUploadPath = selectedServer.getAttribute("ftpPath");
+		kUploadServerType = selectedServer.getAttribute("type");
+
+		Element selectedInstallerPath = getSelectedElement(installerPaths);
+		kCastInstallerUrl = selectedInstallerPath.getAttribute("address");
+
+		Element selectedHelpPath = getSelectedElement(helpPaths);
+		kCastInstallerUrl = selectedHelpPath.getAttribute("address");
+		
 		try {
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
 			Transformer transformer = transformerFactory.newTransformer();

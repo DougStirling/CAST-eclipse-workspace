@@ -17,7 +17,7 @@ import ebook.*;
 
 
 public class BookChoiceWindow extends JFrame {
-//	static final private String kVideoText = changeToHtml("Some CAST e-books contain video versions of pages. The videos are large so, by default, they are stored on our web server. However the e-books for any e-book can be downloaded for offline use.", 250);
+//	static final private String kVideoText = changeToHtml("Some CAST e-books contain video versions of pages. The videos are large so, by default, they are stored on our web server. However the videos for any e-book can be downloaded for offline use.", 250);
 //	static final private String kBookDownloadText = changeToHtml("Downloaded copies of CAST only include core e-books. Additional CAST e-books can be installed from the CAST web site or a zip file.", 250);
 //	static final private String kUpdateText = changeToHtml("Update this downloaded copy of CAST and its e-books to their latest versions. New e-books and videos cannot be downloaded until CAST is up to date.", 250);
 //	static final private String kCustomiseText = changeToHtml("This provides additional advanced commands for authors, allowing e-books and exercises to be customised.", 250);

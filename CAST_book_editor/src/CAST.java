@@ -11,7 +11,7 @@ import cast.core.*;
 import ebook.*;
 
 
-public class CAST_manager {
+public class CAST {
 	
 	static Scanner inputScanner;
 	

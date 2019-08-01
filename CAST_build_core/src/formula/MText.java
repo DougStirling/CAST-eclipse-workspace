@@ -59,6 +59,7 @@ public class MText extends MFormula {
 		codeLookup.put("en", "\u2013");
 		codeLookup.put("em", "\u2014");
 		codeLookup.put("times", "\u00D7");
+		codeLookup.put("minus", "\u2212");
 		codeLookup.put("quarter", "\u00BC");
 		codeLookup.put("half", "\u00BD");
 		codeLookup.put("le", "\u2264");

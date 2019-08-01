@@ -19,10 +19,10 @@ public class LineariseTransformApplet extends ExerciseApplet {
 	private RandomRectangular xGenerator;
 	private RandomNormal yGenerator;
 	
-	private XLabel yVarNameLabel;
-	private HorizAxis xAxis;
-	private VertAxis yAxis;
-	private ScatterView theView;
+	protected XLabel yVarNameLabel;
+	protected HorizAxis xAxis;
+	protected VertAxis yAxis;
+	protected ScatterView theView;
 	
 	private XChoice transformChoice;
 	private int currentTransformChoice = 0;
@@ -145,11 +145,11 @@ public class LineariseTransformApplet extends ExerciseApplet {
 		return getDoubleParam("ordersOfMagnitude");
 	}
 	
-	private String getXVarName() {
+	protected String getXVarName() {
 		return "Explanatory, X";
 	}
 	
-	private String getYVarName() {
+	protected String getYVarName() {
 		return "Response, Y";
 	}
 	
@@ -163,22 +163,25 @@ public class LineariseTransformApplet extends ExerciseApplet {
 			yVarNameLabel = new XLabel("", XLabel.LEFT, this);
 		thePanel.add("North", yVarNameLabel);
 			
-			XPanel displayPanel = new XPanel();
-			displayPanel.setLayout(new AxisLayout());
-			
-				yAxis = new VertAxis(this);
-			displayPanel.add("Left", yAxis);
-			
-				xAxis = new HorizAxis(this);
-			displayPanel.add("Bottom", xAxis);
-			
-				theView = new ScatterView(data, this, xAxis, yAxis, "x", "y");
-				theView.lockBackground(Color.white);
-			displayPanel.add("Center", theView);
-		
-		thePanel.add("Center", displayPanel);
+		thePanel.add("Center", getScatterPanel(data));
 		
 		return thePanel;
+	}
+	
+	protected XPanel getScatterPanel(DataSet data) {
+		XPanel displayPanel = new XPanel();
+		displayPanel.setLayout(new AxisLayout());
+		
+			yAxis = new VertAxis(this);
+		displayPanel.add("Left", yAxis);
+		
+			xAxis = new HorizAxis(this);
+		displayPanel.add("Bottom", xAxis);
+		
+			theView = new ScatterView(data, this, xAxis, yAxis, "x", "y");
+			theView.lockBackground(Color.white);
+		displayPanel.add("Center", theView);
+		return displayPanel;
 	}
 	
 	protected void setDisplayForQuestion() {
@@ -190,20 +193,9 @@ public class LineariseTransformApplet extends ExerciseApplet {
 		transformXSlider.setValue(0);
 		transformYSlider.setValue(0);
 		
-		String xKey = "x";
-		String yKey = "y";
-		
-		switch (getTransformType()) {
-			case LOG_X:
-				xKey = "xExp";
-				break;
-			case LOG_Y:
-				yKey = "yExp";
-				break;
-			case QUAD_Y:
-				yKey = "yQuad";
-				break;
-		}
+		String xKey = getXKey();
+		String yKey = getYKey();
+
 		setupAxis(xAxis, xKey);
 		setupAxis(yAxis, yKey);
 		
@@ -215,6 +207,22 @@ public class LineariseTransformApplet extends ExerciseApplet {
 	
 		data.variableChanged("x");
 		data.variableChanged("y");
+	}
+	
+	protected String getXKey() {
+		if (getTransformType() == LOG_X)
+			return "xExp";
+		else
+			return "x";
+	}
+	
+	protected String getYKey() {
+		if (getTransformType() == LOG_Y)
+			return "yExp";
+		else if (getTransformType() == QUAD_Y)
+			return "yQuad";
+		else
+			return "y";
 	}
 	
 	private void setupAxis(NumCatAxis axis, String varKey) {

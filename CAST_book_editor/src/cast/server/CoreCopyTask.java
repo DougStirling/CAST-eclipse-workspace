@@ -52,9 +52,9 @@ abstract public class CoreCopyTask extends SwingWorker<Object, CopyStatus> {
 	static final public String kServerReleasInfoFileName = "serverReleaseInfo.js";
 	static final public String kInstalledBooksFileName = "installedBooks.js";
 	
-	static final protected String[] kCoreFolders = {"init", "core/images", "core/java", "core/exercises",
+	static final protected String[] kCoreFolders = {"init", "package", "core/images", "core/java", "core/exercises",
 																																							"core/structure", "core/terms"};
-	static final protected String[] kCoreFiles = {"Start_CAST.jar", "core/index.html", "core/pageStyles.css",
+	static final protected String[] kCoreFiles = {"CAST.jar", "core/index.html", "core/pageStyles.css",
 																															"core/sources.data"};
 	
 	static final protected int kCoreCopyStages = 4;

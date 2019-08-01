@@ -27,15 +27,15 @@ public class ScaledMeanSdApplet extends ExerciseApplet {
 	
 	private RandomNormal generator;
 	
-	private ResultValuePanel meanResultPanel, sdResultPanel;
+	protected ResultValuePanel meanResultPanel, sdResultPanel;
 	
 	protected XLabel convertionFormula;
 	protected HorizAxis theAxis;
 	protected DataView theView;
 	private ScaleXYTemplatePanel meanScaleXYTemplate, meanScaleYXTemplate, sdScaleXYTemplate, sdScaleYXTemplate;
 	
-	private int meanResult = ANS_UNCHECKED;
-	private int sdResult = ANS_UNCHECKED;
+	protected int meanResult = ANS_UNCHECKED;
+	protected int sdResult = ANS_UNCHECKED;
 	
 //================================================
 	
@@ -76,6 +76,7 @@ public class ScaledMeanSdApplet extends ExerciseApplet {
 		registerParameter("maxResult", "const");
 		registerParameter("intercept", "const");
 		registerParameter("slope", "const");
+		registerParameter("dataName", "string");
 	}
 	
 	protected String getVarName() {
@@ -147,22 +148,30 @@ public class ScaledMeanSdApplet extends ExerciseApplet {
 				theAxis = new HorizAxis(this);
 			displayPanel.add("Bottom", theAxis);
 			
-				theView = new StackMeanSdView(data, this, theAxis, "y", getDecimals());
+			theView = createDotPlot(data, theAxis);
+			
 				theView.setCrossSize(DataView.LARGE_CROSS);
 				theView.lockBackground(Color.white);
 			displayPanel.add("Center", theView);
 		
 		thePanel.add("Center", displayPanel);
 		
-			XPanel meanSdPanel = new XPanel();
-			meanSdPanel.setLayout(new ProportionLayout(0.5, 0));
-			
-			meanSdPanel.add(ProportionLayout.LEFT, createMeanPanel());
-			meanSdPanel.add(ProportionLayout.RIGHT, createSdPanel());
-		
-		thePanel.add("South", meanSdPanel);
+		thePanel.add("South", createTemplates());
 		
 		return thePanel;
+	}
+	
+	protected DataView createDotPlot(DataSet data, HorizAxis theAxis) {
+		return new StackMeanSdView(data, this, theAxis, "y", getDecimals());
+	}
+	
+	protected XPanel createTemplates() {
+		XPanel meanSdPanel = new XPanel();
+		meanSdPanel.setLayout(new ProportionLayout(0.5, 0));
+		
+		meanSdPanel.add(ProportionLayout.LEFT, createMeanPanel(true));
+		meanSdPanel.add(ProportionLayout.RIGHT, createSdPanel(true));
+		return meanSdPanel;
 	}
 	
 	protected XLabel createConvertionFormula() {
@@ -172,28 +181,30 @@ public class ScaledMeanSdApplet extends ExerciseApplet {
 		return convertionFormula;
 	}
 	
-	private XPanel createMeanPanel() {
+	protected XPanel createMeanPanel(boolean showTemplates) {
 		XPanel meanPanel = new XPanel();
 		meanPanel.setLayout(new VerticalLayout(VerticalLayout.FILL, VerticalLayout.VERT_TOP, 10));
 		
-			XLabel meanLabel = new XLabel(translate("Mean"), XLabel.CENTER, this);
-			meanLabel.setFont(getBigBoldFont());
-			meanLabel.setForeground(kHeadingColor);
-		meanPanel.add(meanLabel);
+		if (showTemplates) {
+				XLabel meanLabel = new XLabel(translate("Mean"), XLabel.CENTER, this);
+				meanLabel.setFont(getBigBoldFont());
+				meanLabel.setForeground(kHeadingColor);
+			meanPanel.add(meanLabel);
+				
+				XPanel templatePanel = new InsetPanel(0, 4, 0, 0);
+				templatePanel.setLayout(new VerticalLayout(VerticalLayout.CENTER, VerticalLayout.VERT_TOP, 5));
+				
+					meanScaleXYTemplate = new ScaleXYTemplatePanel(this, ScaleXYTemplatePanel.X_TO_Y, getMaxResult());
+					registerStatusItem("meanXYTemplate", meanScaleXYTemplate);
+				templatePanel.add(meanScaleXYTemplate);
 			
-			XPanel templatePanel = new InsetPanel(0, 4, 0, 0);
-			templatePanel.setLayout(new VerticalLayout(VerticalLayout.CENTER, VerticalLayout.VERT_TOP, 5));
-			
-				meanScaleXYTemplate = new ScaleXYTemplatePanel(this, ScaleXYTemplatePanel.X_TO_Y, getMaxResult());
-				registerStatusItem("meanXYTemplate", meanScaleXYTemplate);
-			templatePanel.add(meanScaleXYTemplate);
-		
-				meanScaleYXTemplate = new ScaleXYTemplatePanel(this, ScaleXYTemplatePanel.Y_TO_X, getMaxResult());
-				registerStatusItem("meanYXTemplate", meanScaleYXTemplate);
-			templatePanel.add(meanScaleYXTemplate);
-			
-			templatePanel.lockBackground(kMeanBackgroundColor);
-		meanPanel.add(templatePanel);
+					meanScaleYXTemplate = new ScaleXYTemplatePanel(this, ScaleXYTemplatePanel.Y_TO_X, getMaxResult());
+					registerStatusItem("meanYXTemplate", meanScaleYXTemplate);
+				templatePanel.add(meanScaleYXTemplate);
+				
+				templatePanel.lockBackground(kMeanBackgroundColor);
+			meanPanel.add(templatePanel);
+		}
 			
 			meanResultPanel = new ResultValuePanel(this, "Mean =", getYUnits(), 6);
 			registerStatusItem("mean", meanResultPanel);
@@ -201,28 +212,30 @@ public class ScaledMeanSdApplet extends ExerciseApplet {
 		return meanPanel;
 	}
 	
-	private XPanel createSdPanel() {
+	protected XPanel createSdPanel(boolean showTemplates) {
 		XPanel sdPanel = new XPanel();
 		sdPanel.setLayout(new VerticalLayout(VerticalLayout.FILL, VerticalLayout.VERT_TOP, 10));
-		
-			XLabel sdLabel = new XLabel(translate("St devn"), XLabel.CENTER, this);
-			sdLabel.setFont(getBigBoldFont());
-			sdLabel.setForeground(kHeadingColor);
-		sdPanel.add(sdLabel);
+
+		if (showTemplates) {
+				XLabel sdLabel = new XLabel(translate("St devn"), XLabel.CENTER, this);
+				sdLabel.setFont(getBigBoldFont());
+				sdLabel.setForeground(kHeadingColor);
+			sdPanel.add(sdLabel);
+				
+				XPanel templatePanel = new InsetPanel(0, 4, 0, 0);
+				templatePanel.setLayout(new VerticalLayout(VerticalLayout.CENTER, VerticalLayout.VERT_TOP, 5));
+				
+					sdScaleXYTemplate = new ScaleXYTemplatePanel(this, ScaleXYTemplatePanel.X_TO_Y, getMaxResult());
+					registerStatusItem("sdXYTemplate", sdScaleXYTemplate);
+				templatePanel.add(sdScaleXYTemplate);
 			
-			XPanel templatePanel = new InsetPanel(0, 4, 0, 0);
-			templatePanel.setLayout(new VerticalLayout(VerticalLayout.CENTER, VerticalLayout.VERT_TOP, 5));
-			
-				sdScaleXYTemplate = new ScaleXYTemplatePanel(this, ScaleXYTemplatePanel.X_TO_Y, getMaxResult());
-				registerStatusItem("sdXYTemplate", sdScaleXYTemplate);
-			templatePanel.add(sdScaleXYTemplate);
-		
-				sdScaleYXTemplate = new ScaleXYTemplatePanel(this, ScaleXYTemplatePanel.Y_TO_X, getMaxResult());
-				registerStatusItem("sdYXTemplate", sdScaleYXTemplate);
-			templatePanel.add(sdScaleYXTemplate);
-			
-			templatePanel.lockBackground(kSdBackgroundColor);
-		sdPanel.add(templatePanel);
+					sdScaleYXTemplate = new ScaleXYTemplatePanel(this, ScaleXYTemplatePanel.Y_TO_X, getMaxResult());
+					registerStatusItem("sdYXTemplate", sdScaleYXTemplate);
+				templatePanel.add(sdScaleYXTemplate);
+				
+				templatePanel.lockBackground(kSdBackgroundColor);
+			sdPanel.add(templatePanel);
+		}
 			
 			sdResultPanel = new ResultValuePanel(this, translate("St devn") + " =", getYUnits(), 6);
 			registerStatusItem("sd", sdResultPanel);
@@ -252,13 +265,7 @@ public class ScaledMeanSdApplet extends ExerciseApplet {
 		sdResultPanel.clear();
 		sdResultPanel.invalidate();
 		
-		meanScaleXYTemplate.setXYValues(kZeroValue, kZeroValue, kZeroValue);
-		
-		meanScaleYXTemplate.setYXValues(kZeroValue, kZeroValue, kZeroValue);
-		
-		sdScaleXYTemplate.setXYValues(kZeroValue, kZeroValue, kZeroValue);
-		
-		sdScaleYXTemplate.setYXValues(kZeroValue, kZeroValue, kZeroValue);
+		setTemplatesForQuestion();
 		
 		setupConvertionFormula();
 		
@@ -266,9 +273,17 @@ public class ScaledMeanSdApplet extends ExerciseApplet {
 		theAxis.setAxisName(getVarName());
 		theAxis.invalidate();
 		
-		((StackMeanSdView)theView).setDecimals(getDecimals());
+		if (theView instanceof StackMeanSdView)
+			((StackMeanSdView)theView).setDecimals(getDecimals());
 		
 		validate();
+	}
+	
+	protected void setTemplatesForQuestion() {
+		meanScaleXYTemplate.setXYValues(kZeroValue, kZeroValue, kZeroValue);
+		meanScaleYXTemplate.setYXValues(kZeroValue, kZeroValue, kZeroValue);
+		sdScaleXYTemplate.setXYValues(kZeroValue, kZeroValue, kZeroValue);
+		sdScaleYXTemplate.setYXValues(kZeroValue, kZeroValue, kZeroValue);
 	}
 	
 	private void setScaling(NumVariable baseVar, ScaledVariable yVar, double targetMin, double targetMax) {
@@ -307,6 +322,7 @@ public class ScaledMeanSdApplet extends ExerciseApplet {
 			setScaling(baseVar, (ScaledVariable)data.getVariable("y"), targetMin, targetMax);
 		} while (rejectSample(axisMin, axisMax));
 		
+		data.getVariable("y").name = getVarName();
 	}
 	
 	
@@ -333,7 +349,9 @@ public class ScaledMeanSdApplet extends ExerciseApplet {
 					messagePanel.insertRedText("You have not typed a value for the mean.");
 				else if (meanResult == ANS_CORRECT)
 					messagePanel.insertText("You have given the correct value for the mean.");
-				else {		//		meanResult == ANS_WRONG
+				else {		//		meanResult == ANS_WRONG or ANS_CLOSE
+					if (meanResult == ANS_CLOSE)
+						messagePanel.insertRedText("Your answer is not accurate enough. ");
 					messagePanel.insertRedText("You should use the formula  ");
 					if (getDirection() == ScaleXYTemplatePanel.X_TO_Y)
 						messagePanel.insertFormula(xToYFormula("mean"));
@@ -348,7 +366,9 @@ public class ScaledMeanSdApplet extends ExerciseApplet {
 					messagePanel.insertRedText("The standard deviation cannot be negative.");
 				else if (sdResult == ANS_CORRECT)
 					messagePanel.insertText("You have given the correct standard deviation.");
-				else {		//		sdResult == ANS_WRONG
+				else {		//		sdResult == ANS_WRONG or ANS_CLOSE
+					if (sdResult == ANS_CLOSE)
+						messagePanel.insertRedText("Your answer is not accurate enough. ");
 					messagePanel.insertRedText("You should use the formula  ");
 					if (getDirection() == ScaleXYTemplatePanel.X_TO_Y)
 						messagePanel.insertFormula(xToYSdFormula());
@@ -389,7 +409,7 @@ public class ScaledMeanSdApplet extends ExerciseApplet {
 																																					ratio, stdContext);
 	}
 	
-	private MFormula xToYSdFormula() {
+	protected MFormula xToYSdFormula() {
 		FormulaContext stdContext = new FormulaContext(null, null, this);
 		NumValue slopeVal = getSlope();
 		
@@ -399,7 +419,7 @@ public class ScaledMeanSdApplet extends ExerciseApplet {
 																																	rightFormula, stdContext);
 	}
 	
-	private MFormula yToXSdFormula() {
+	protected MFormula yToXSdFormula() {
 		FormulaContext stdContext = new FormulaContext(null, null, this);
 		NumValue slopeVal = getSlope();
 		
@@ -432,13 +452,20 @@ public class ScaledMeanSdApplet extends ExerciseApplet {
 	
 	
 //-----------------------------------------------------------
+
+	protected double sourceMean, sourceSd;
+	private NumValue sourceMeanVal, sourceSdVal;
+	protected void findSourceMeanSd() {
+		sourceMeanVal = ((StackMeanSdView)theView).getMean();
+		sourceSdVal = ((StackMeanSdView)theView).getSD();
+		sourceMean = sourceMeanVal.toDouble();
+		sourceSd = sourceSdVal.toDouble();
+	}
+	
 	
 	protected int assessAnswer() {			//	side effect is to set meanResult and sdResult
 																			//	OK for use by getMark() because they are not used in message unless overall result changes from ANS_UNCHECKED
-		NumValue sourceMeanVal = ((StackMeanSdView)theView).getMean();
-		NumValue sourceSdVal = ((StackMeanSdView)theView).getSD();
-		double sourceMean = sourceMeanVal.toDouble();
-		double sourceSd = sourceSdVal.toDouble();
+		findSourceMeanSd();
 		
 		NumValue interceptVal = getIntercept();
 		NumValue slopeVal = getSlope();
@@ -446,7 +473,7 @@ public class ScaledMeanSdApplet extends ExerciseApplet {
 		double slope = slopeVal.toDouble();
 		
 		int resultDecimals = getMaxResult().decimals;
-		double slop = Math.pow(10.01, -resultDecimals);
+		double factor = Math.pow(10.0, resultDecimals);
 		
 		if (meanResultPanel.isClear())
 			meanResult = ANS_INCOMPLETE;
@@ -454,8 +481,10 @@ public class ScaledMeanSdApplet extends ExerciseApplet {
 			double attempt = meanResultPanel.getAttempt().toDouble();
 			double correct = (getDirection() == ScaleXYTemplatePanel.X_TO_Y)
 													? intercept + slope * sourceMean : (sourceMean - intercept) / slope;
-			if (Math.abs(attempt - correct) < slop)
+			if (Math.round(attempt * factor) == Math.round(correct * factor))
 				meanResult = ANS_CORRECT;
+			else if (Math.round(attempt * factor / 10.0) == Math.round(correct * factor / 10.0))
+				meanResult = ANS_CLOSE;
 			else
 				meanResult = ANS_WRONG;
 		}
@@ -468,8 +497,10 @@ public class ScaledMeanSdApplet extends ExerciseApplet {
 																				? slope * sourceSd : sourceSd / slope;
 			if (attempt <= 0.0)
 				sdResult = ANS_INVALID;
-			if (Math.abs(attempt - correct) < slop)
+			else if (Math.round(attempt * factor) == Math.round(correct * factor))
 				sdResult = ANS_CORRECT;
+			else if (Math.round(attempt * factor / 10.0) == Math.round(correct * factor / 10.0))
+				sdResult = ANS_CLOSE;
 			else
 				sdResult = ANS_WRONG;
 		}
@@ -485,10 +516,7 @@ public class ScaledMeanSdApplet extends ExerciseApplet {
 	protected void showCorrectWorking() {
 		meanResult = sdResult = ANS_TOLD;
 		
-		NumValue sourceMeanVal = ((StackMeanSdView)theView).getMean();
-		NumValue sourceSdVal = ((StackMeanSdView)theView).getSD();
-		double sourceMean = sourceMeanVal.toDouble();
-		double sourceSd = sourceSdVal.toDouble();
+		findSourceMeanSd();
 		
 		NumValue interceptVal = getIntercept();
 		NumValue slopeVal = getSlope();

@@ -17,8 +17,8 @@ abstract public class CoreContinApplet extends ExerciseApplet {
 	static final protected Color kTemplateBackground = new Color(0xFFE594);
 		
 	protected StaticContinTableView theTable;
-	private XLabel xNameLabel;
-	private XVertLabel yNameLabel;
+	protected XLabel xNameLabel;
+	protected XVertLabel yNameLabel;
 	
 	protected ResultValuePanel resultPanel;
 	

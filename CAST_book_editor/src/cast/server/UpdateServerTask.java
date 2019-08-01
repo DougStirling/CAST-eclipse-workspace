@@ -3,11 +3,13 @@ package cast.server;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.util.regex.*;
 
 import javax.swing.*;
 
 import org.apache.commons.net.ftp.FTPClient;
 
+import cast.core.Options;
 import cast.utils.*;
 
 
@@ -60,7 +62,7 @@ public class UpdateServerTask extends CoreCopyTask {
 	
 	protected void copyToDestination() throws InterruptedException {
 		if (!uploadTheManagerJar)
-			coreDates.remove("Start_CAST.jar");
+			coreDates.remove("CAST.jar");
 		if (!uploadJavaJar)
 			coreDates.remove("core/java/");
 		
@@ -90,6 +92,16 @@ public class UpdateServerTask extends CoreCopyTask {
 		uploadFile(serverVersionInfo, "core/" + kServerReleasInfoFileName);
 		
 		uploadFile("core/" + kInstalledBooksFileName);
+		
+		File versionsFile = new File(castSourceDir, "versions.text");
+		String versions = HtmlHelper.getFileAsString(versionsFile);
+		String versionPattern = Options.kUploadServerType + "\\s=\\s(//d*)";
+		Pattern thePattern = Pattern.compile(versionPattern, Pattern.CASE_INSENSITIVE + Pattern.DOTALL);
+		Matcher theMatcher = thePattern.matcher(versions);
+		if (theMatcher.find()) {
+			String version = theMatcher.group(1);
+			uploadString(version, "versions.text");
+		}
 	}
 	
 	private StringsHash getServerVersionInfo() {

@@ -19,6 +19,7 @@ abstract public class CoreDragItemsView extends DataView implements StatusInterf
 	protected int displayType;
 	
 	private boolean fixedTopDistn = false;
+	private boolean fixedOrder = false;
 	
 	public CoreDragItemsView(DataSet theData, XApplet applet, int[] order, int displayType, 
 																																								Insets insets) {
@@ -30,6 +31,10 @@ abstract public class CoreDragItemsView extends DataView implements StatusInterf
 	
 	public void setFixedTopDistn(boolean fixedTopDistn) {
 		this.fixedTopDistn = fixedTopDistn;
+	}
+	
+	public void setFixedOrder(boolean fixedOrder) {
+		this.fixedOrder = fixedOrder;
 	}
 	
 	public String getStatus() {
@@ -130,7 +135,7 @@ abstract public class CoreDragItemsView extends DataView implements StatusInterf
 	}
 	
 	protected boolean canDrag() {
-		return true;
+		return !fixedOrder;
 	}
 	
 	private int dragIndex = -1;

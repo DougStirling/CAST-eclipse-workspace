@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="Start_CAST" default="build" basedir=".">
+<project name="CAST" default="build" basedir=".">
 	<property name="src" location="src"/> <!-- java source folder -->
 	<property name="bin" location="bin"/> <!-- intermediate build products -->
 	<property name="jars" location="../../CAST"/> <!-- jar files -->

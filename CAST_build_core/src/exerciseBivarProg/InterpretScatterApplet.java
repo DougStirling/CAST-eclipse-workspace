@@ -142,9 +142,13 @@ public class InterpretScatterApplet extends ExerciseApplet {
 			dragPanel.add(new ImageCanvas(null, 0, 0, this), Drag4LabelPanel.LABEL_COMPONENT, i);	//	z-order front
 		
 		for (int i=0 ; i<4 ; i++)
-			dragPanel.add(Drag4LabelPanel.ITEM_COMPONENT, scatterPanel(data, type[i], i));
+			dragPanel.add(Drag4LabelPanel.ITEM_COMPONENT, getScatterPanel(data, i));
 		
 		return dragPanel;
+	}
+	
+	protected XPanel getScatterPanel(DataSet data, int index) {
+		return scatterPanel(data, type[index], index);
 	}
 	
 	protected XPanel scatterPanel(DataSet data, int type, int panelIndex) {
@@ -196,19 +200,22 @@ public class InterpretScatterApplet extends ExerciseApplet {
 //			for (int i=0 ; i<4 ; i++)
 //				messagePermutation[i] = i;
 		
-		for (int i=0 ; i<4 ; i++) {
-			int displayIndex = type[i];
-			
-			xAxis[i].readNumLabels(xAxisInfo[displayIndex]);
-			xAxis[i].invalidate();
-			
-			yAxis[i].readNumLabels(yAxisInfo[displayIndex]);
-			yAxis[i].invalidate();
-			
-			theView[i].changeVariables(kYKeys[displayIndex], kXKeys[displayIndex]);
-		}
+		for (int i=0 ; i<4 ; i++)
+			setScatterplotForQuestion(i);
 		
 		setupLabels();
+	}
+	
+	protected void setScatterplotForQuestion(int index) {
+		int displayIndex = type[index];
+		xAxis[index].readNumLabels(xAxisInfo[displayIndex]);
+		xAxis[index].invalidate();
+		
+		yAxis[index].readNumLabels(yAxisInfo[displayIndex]);
+		yAxis[index].invalidate();
+		
+		theView[index].changeVariables(kYKeys[displayIndex], kXKeys[displayIndex]);
+		
 	}
 	
 	private void resampleOneCluster(int type, int n, double xMin, double xMax, double yMin, double yMax) {
@@ -400,6 +407,9 @@ public class InterpretScatterApplet extends ExerciseApplet {
 				resampleOneCluster(i, nTotal, xMin, xMax, yMin, yMax);
 			else
 				resampleTwoClusters(i, nTotal, xMin, xMax, yMin, yMax);
+			
+			data.getVariable(kXKeys[i]).name = getXVarName();
+			data.getVariable(kYKeys[i]).name = getYVarName();
 		}
 	}
 	
@@ -490,7 +500,7 @@ public class InterpretScatterApplet extends ExerciseApplet {
 	protected void insertMessageContent(MessagePanel messagePanel) {
 		switch (result) {
 			case ANS_UNCHECKED:
-				messagePanel.insertText("Drag the four statements onto the scatterplots that they best describe.");
+				messagePanel.insertText("Drag the four statements onto the " + getScatterplotsName() + " that they best describe.");
 				break;
 			case ANS_TOLD:
 				messagePanel.insertRedHeading("Answer");
@@ -499,16 +509,20 @@ public class InterpretScatterApplet extends ExerciseApplet {
 				break;
 			case ANS_CORRECT:
 				messagePanel.insertRedHeading("Good!\n");
-				messagePanel.insertText("You have correctly matched the statements to the scatterplots.");
+				messagePanel.insertText("You have correctly matched the statements to the " + getScatterplotsName() + ".");
 				break;
 			case ANS_WRONG:
 				messagePanel.insertRedHeading("Wrong!\n");
-				messagePanel.insertRedText("The statements outlined in red are not the best descriptions of the scatterplots above them.");
+				messagePanel.insertRedText("The statements outlined in red are not the best descriptions of the " + getScatterplotsName() + " above them.");
 				boolean correct[] = dragPanel.checkCorrectMessages();
 				addScatterDescriptions(correct, messagePanel);
 				
 				break;
 		}
+	}
+	
+	protected String getScatterplotsName() {
+		return "scatterplots";
 	}
 	
 	private void addScatterDescriptions(boolean[] correct, MessagePanel messagePanel) {

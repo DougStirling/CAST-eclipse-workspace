@@ -428,7 +428,7 @@ public class FindResidualApplet extends ExerciseApplet {
 		return getSlop(15);
 	}
 	
-	private double getAttempt() {
+	protected double getAttempt() {
 		return resultPanel.getAttempt().toDouble();
 	}
 	

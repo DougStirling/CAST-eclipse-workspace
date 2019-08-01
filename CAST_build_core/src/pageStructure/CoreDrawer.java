@@ -340,6 +340,14 @@ abstract public class CoreDrawer {
 		return new Color(Integer.parseInt(getForegroundColorString(s), 16));
 	}
 	
+	static private long lastTime = System.nanoTime();
+	static public void showElapsedTime(String s) {
+		long currentTime = System.nanoTime();
+		long elapsedMillisec = (currentTime - lastTime) / 1000000;
+		lastTime = currentTime;
+		System.out.println(s + ": " + elapsedMillisec);
+	}
+	
 //--------------------------------------------------------------------
 	
 	private Vector children = new Vector();

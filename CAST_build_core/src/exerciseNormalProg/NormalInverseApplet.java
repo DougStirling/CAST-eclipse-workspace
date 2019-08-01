@@ -14,6 +14,10 @@ public class NormalInverseApplet extends CoreNormalProbApplet {
 	
 //-----------------------------------------------------------
 	
+	protected int getRequiredDecimals() {
+		return getMaxValue().decimals;
+	}
+	
 	protected XPanel getWorkingPanels(DataSet data) {
 		normalLookupPanel = new NormalLookupPanel(data, "distn", this, NormalLookupPanel.HIGH_ONLY);
 		registerStatusItem("drag", normalLookupPanel);
@@ -44,7 +48,7 @@ public class NormalInverseApplet extends CoreNormalProbApplet {
 		NumValue percent = getPercent();
 		switch (result) {
 			case ANS_UNCHECKED:
-				messagePanel.insertText("Find the required value then type it into the text-edit box above.\n");
+				messagePanel.insertText("Find the required value then type it into the text-edit box above.");
 				break;
 			case ANS_INCOMPLETE:
 				messagePanel.insertRedHeading("Error!\n");
@@ -69,7 +73,7 @@ public class NormalInverseApplet extends CoreNormalProbApplet {
 		}
 	}
 	
-	private String areaCloserString(NumValue percent) {
+	protected String areaCloserString(NumValue percent) {
 		String s = "However you should be able to find the answer more accurately by typing different values"
 										+ " into the red text-edit box above the normal curve until the area to the ";
 		if (tailType() == GREATER_THAN)
@@ -79,7 +83,7 @@ public class NormalInverseApplet extends CoreNormalProbApplet {
 		return s + " is " + new NumValue(percent.toDouble() * 0.01, percent.decimals + 2) + ".";
 	}
 	
-	private String areaAnswerString(NumValue percent) {
+	protected String areaAnswerString(NumValue percent) {
 		NumValue quantile =  new NumValue(evaluatePercentile(percent, "distn"), getMaxValue().decimals);
 		String s;
 		if (tailType() == GREATER_THAN)
@@ -89,7 +93,7 @@ public class NormalInverseApplet extends CoreNormalProbApplet {
 		return s + quantile.toString() + " is " + new NumValue(percent.toDouble() * 0.01, percent.decimals + 2) + ".";
 	}
 	
-	private String areaHintString(NumValue percent) {
+	protected String areaHintString(NumValue percent) {
 		String s = "Find the value for which the area to the ";
 		if (tailType() == GREATER_THAN)
 			s += "right";
@@ -131,7 +135,7 @@ public class NormalInverseApplet extends CoreNormalProbApplet {
 	
 	protected void showCorrectWorking() {
 		NumValue percent = getPercent();
-		NumValue correct = new NumValue(evaluatePercentile(percent, "distn"), getMaxValue().decimals);
+		NumValue correct = new NumValue(evaluatePercentile(percent, "distn"), getRequiredDecimals());
 		
 		resultPanel.showAnswer(correct);
 		

@@ -25,7 +25,7 @@ public class BetaInterpInterpApplet extends ExerciseApplet {
 				questionPanel = new QuestionPanel(this);
 			topPanel.add(questionPanel);
 				
-			topPanel.add(getWorkingPanels(null));
+			topPanel.add(getWorkingPanels(data));
 			
 			topPanel.add(createMarkingPanel(NO_HINTS));
 			
@@ -39,29 +39,33 @@ public class BetaInterpInterpApplet extends ExerciseApplet {
 //-----------------------------------------------------------
 	
 	protected void registerParameterTypes() {
-//		registerParameter("index", "int");					//	always registered
-		registerParameter("slope", "const");
-		registerParameter("intercept", "const");	
+//		registerParameter("index", "int");					//	always registered	
 		registerParameter("xVarName", "string");
 		registerParameter("yVarName", "string");
 		registerParameter("qnParam", "choice");
 		registerParameter("paramOrder", "choice");
 		registerParameter("qnText", "array");		//	slope (correct, wrong), intercept (correct, wrong)
+		registerExtraParameterTypes();
 	}
 	
-	private NumValue getSlope() {
+	protected void registerExtraParameterTypes() {
+		registerParameter("slope", "const");
+		registerParameter("intercept", "const");
+	}
+	
+	protected NumValue getSlope() {						//  In the external analysis version, this is calculated by LS from the random data
 		return getNumValueParam("slope");
 	}
 	
-	private NumValue getIntercept() {
+	protected NumValue getIntercept() {						//  In the external analysis version, this is calculated by LS from the random data
 		return getNumValueParam("intercept");
 	}
 	
-	private String getXVarName() {
+	protected String getXVarName() {
 		return getStringParam("xVarName");
 	}
 	
-	private String getYVarName() {
+	protected String getYVarName() {
 		return getStringParam("yVarName");
 	}
 	
@@ -92,15 +96,7 @@ public class BetaInterpInterpApplet extends ExerciseApplet {
 		XPanel thePanel = new XPanel();
 		thePanel.setLayout(new BorderLayout(0, 10));
 		
-			XPanel eqnPanel = new XPanel();
-			eqnPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
-			
-				eqnView = new XLabel("", XLabel.CENTER, this);
-				eqnView.setFont(getBigFont());
-				eqnView.setForeground(kEqnColor);
-			eqnPanel.add(eqnView);
-		
-		thePanel.add("North", eqnPanel);
+		thePanel.add("North", equationPanel(data));
 			
 			multiChoicePanel = new BetaInterpChoicePanel(this, getXVarName(), getYVarName(), getSlope(),
 																						getIntercept(), getQuestionParam(), getQuestionText());
@@ -111,12 +107,32 @@ public class BetaInterpInterpApplet extends ExerciseApplet {
 		return thePanel;
 	}
 	
+	protected XPanel equationPanel(DataSet data) {						//  In the external analysis version, this adds the export data button
+		XPanel eqnPanel = new XPanel();
+		eqnPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
+		
+			eqnView = new XLabel("", XLabel.CENTER, this);
+			eqnView.setFont(getBigFont());
+			eqnView.setForeground(kEqnColor);
+		eqnPanel.add(eqnView);
+		return eqnPanel;
+	}
+	
 	protected void setDisplayForQuestion() {
 		multiChoicePanel.changeOptions(getXVarName(), getYVarName(), getSlope(), getIntercept(),
 																												getQuestionParam(), getQuestionText());
 		multiChoicePanel.clearRadioButtons();
 		multiChoicePanel.invalidate();
 		
+		setEquationForQuestion();
+	}
+	
+	protected void setEquationForQuestion() {						//  In the external analysis version, the export data button's data name is changed
+		eqnView.setText(getLsEquation());
+		eqnView.invalidate();
+	}
+	
+	protected String getLsEquation() {
 		NumValue slope = new NumValue(getSlope());					//	clone since we may need to change sign
 		NumValue intercept = new NumValue(getIntercept());	//	clone since we may need to change sign
 		String rightString;
@@ -136,8 +152,7 @@ public class BetaInterpInterpApplet extends ExerciseApplet {
 				rightString = slope + " " + getXVarName() + " - " + intercept;
 			}
 		}
-		eqnView.setText(getYVarName() + "  =  " + rightString);
-		eqnView.invalidate();
+		return getYVarName() + "  =  " + rightString;
 	}
 	
 	protected void setDataForQuestion() {
@@ -156,10 +171,12 @@ public class BetaInterpInterpApplet extends ExerciseApplet {
 				break;
 			case ANS_TOLD:
 				messagePanel.insertRedHeading("Answer\n");
+				insertLSEquation(messagePanel);
 				messagePanel.insertText(multiChoicePanel.getSelectedOptionMessage());
 				break;
 			case ANS_CORRECT:
 				messagePanel.insertHeading("Correct!\n");
+				insertLSEquation(messagePanel);
 				messagePanel.insertText(multiChoicePanel.getSelectedOptionMessage());
 				break;
 			case ANS_INCOMPLETE:
@@ -168,9 +185,14 @@ public class BetaInterpInterpApplet extends ExerciseApplet {
 				break;
 			case ANS_WRONG:
 				messagePanel.insertRedHeading("Wrong!\n");
+				insertLSEquation(messagePanel);
 				messagePanel.insertRedText(multiChoicePanel.getSelectedOptionMessage());
 				break;
 		}
+	}
+	
+	protected void insertLSEquation(MessagePanel messagePanel) {
+		
 	}
 	
 	protected int getMessageHeight() {

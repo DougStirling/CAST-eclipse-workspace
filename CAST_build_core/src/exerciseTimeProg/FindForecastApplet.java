@@ -85,19 +85,19 @@ public class FindForecastApplet extends ExerciseApplet {
 		return getIntParam("lastYear") - getIntParam("firstYear") + 1;
 	}
 	
-	private String getVarName() {
+	protected String getVarName() {
 		return getStringParam("varName");
 	}
 	
-	private int getFirstYear() {
+	protected int getFirstYear() {
 		return getIntParam("firstYear");
 	}
 	
-	private NumValue getEsConst() {
+	protected NumValue getEsConst() {
 		return getNumValueParam("esConst");
 	}
 	
-	private int getForecastDecimals() {
+	protected int getForecastDecimals() {
 		return getIntParam("forecastDecimals");
 	}
 	
@@ -140,11 +140,11 @@ public class FindForecastApplet extends ExerciseApplet {
 		return getDoubleParam("autoCorrel");
 	}
 	
-	private int getForecastYear() {
+	protected int getForecastYear() {
 		return getIntParam("forecastYear");
 	}
 	
-	private int getBaseYear() {
+	protected int getBaseYear() {
 		return getIntParam("baseYear");
 	}
 	
@@ -209,7 +209,7 @@ public class FindForecastApplet extends ExerciseApplet {
 		return thePanel;
 	}
 	
-	private XPanel listPanel(DataSet data) {
+	protected XPanel listPanel(DataSet data) {
 		XPanel thePanel = new XPanel();
 		thePanel.setLayout(new CenterFillLayout(CenterFillLayout.FILL_VERT));
 		
@@ -222,7 +222,7 @@ public class FindForecastApplet extends ExerciseApplet {
 		return thePanel;
 	}
 	
-	private XPanel tablePanel(DataSet data) {
+	protected XPanel tablePanel(DataSet data) {
 		XPanel thePanel = new InsetPanel(20, 7);
 		thePanel.setLayout(new BorderLayout(0, 0));
 			String[] paramName = {"intercept", "coded year"};
@@ -233,7 +233,7 @@ public class FindForecastApplet extends ExerciseApplet {
 		return thePanel;
 	}
 
-	private XPanel resultPanels() {
+	protected XPanel resultPanels() {
 		XPanel eqnsPanel = new InsetPanel(2, 2);
 		eqnsPanel.setLayout(new ProportionLayout(0.5, 4, ProportionLayout.VERTICAL));
 		
@@ -255,12 +255,6 @@ public class FindForecastApplet extends ExerciseApplet {
 	protected void setDisplayForQuestion() {
 		NumVariable yVar = (NumVariable)data.getVariable("y");
 		varName.setText(yVar.name);
-		int resultDecimals = getForecastDecimals();
-		
-		regnResultPanel.clear();
-		regnResultPanel.setResultDecimals(resultDecimals);
-		esResultPanel.clear();
-		esResultPanel.setResultDecimals(resultDecimals);
 		
 		timeAxis.setNoOfVals(getForecastYear() - getFirstYear() + 1);
 		timeAxis.setTimeScale(getYearLabelInfo());
@@ -269,6 +263,18 @@ public class FindForecastApplet extends ExerciseApplet {
 		yAxis.readNumLabels(getYAxisInfo());
 		yAxis.invalidate();
 		
+		setTablesForQuestion();
+		
+		validate();
+	}
+	
+	protected void setTablesForQuestion() {
+		int resultDecimals = getForecastDecimals();
+		regnResultPanel.clear();
+		regnResultPanel.setResultDecimals(resultDecimals);
+		esResultPanel.clear();
+		esResultPanel.setResultDecimals(resultDecimals);
+		
 		valueList.resetVariables();
 		valueList.invalidate();
 		valueList.repaint();
@@ -276,8 +282,6 @@ public class FindForecastApplet extends ExerciseApplet {
 		valueList.scrollToEnd();
 		
 		regnTable.setMaxParams(getMaxEst(), getMaxSe());
-		
-		validate();
 	}
 	
 //-----------------------------------------------------------
@@ -359,10 +363,10 @@ public class FindForecastApplet extends ExerciseApplet {
 		indexVar.setNoOfValues(n);
 		
 		ScaledVariable yearVar = (ScaledVariable)data.getVariable("year");
-		yearVar.setParam(0, getFirstYear() - 1);
+		yearVar.setParam(0, getFirstYear() - 1);													//		because index variable starts at 1, not 0
 		
 		ScaledVariable codedYearVar = (ScaledVariable)data.getVariable("codedYear");
-		codedYearVar.setParam(0, getFirstYear() - getBaseYear());
+		codedYearVar.setParam(0, getFirstYear() - getBaseYear() - 1);			//		because index variable starts at 1, not 0
 		
 		ExpSmoothVariable esVar = (ExpSmoothVariable)data.getVariable("es");
 		NumValue esConst = getEsConst() ;
@@ -420,7 +424,7 @@ public class FindForecastApplet extends ExerciseApplet {
 		}
 	}
 	
-	private void insertCorrectEsMessage(MessagePanel messagePanel) {
+	protected void insertCorrectEsMessage(MessagePanel messagePanel) {
 		NumVariable yVar = (NumVariable)data.getVariable("y");
 		int forecastYear = getForecastYear();
 		int lastYear = getFirstYear() + yVar.noOfValues() - 1;
@@ -428,7 +432,7 @@ public class FindForecastApplet extends ExerciseApplet {
 									+ " is the most recent exponentially smoothed value (for " + lastYear + ").");
 	}
 	
-	private void insertCorrectRegnMessage(MessagePanel messagePanel) {
+	protected void insertCorrectRegnMessage(MessagePanel messagePanel) {
 		MultipleRegnModel ls = (MultipleRegnModel)data.getVariable("ls");
 		NumValue intercept = ls.getParameter(0);
 		NumValue slope = ls.getParameter(1);

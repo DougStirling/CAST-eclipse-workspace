@@ -19,12 +19,13 @@ public class GuessCorrApplet extends MeanSDExerciseApplet {
 													//	'close' sd must be within kCloseFactor times the legal range
 	
 	private RandomNormal xGenerator, yGenerator;
+	protected NumValue corr = null;
 	
 	private XLabel yVarNameLabel;
 	private HorizAxis xAxis;
 	private VertAxis yAxis;
 	
-	private ResultValuePanel resultPanel;
+	protected ResultValuePanel corrResultPanel;
 	
 //================================================
 	
@@ -39,9 +40,7 @@ public class GuessCorrApplet extends MeanSDExerciseApplet {
 			XPanel bottomPanel = new XPanel();
 			bottomPanel.setLayout(new VerticalLayout(VerticalLayout.FILL, VerticalLayout.VERT_TOP, 4));
 			
-				resultPanel = new ResultValuePanel(this, translate("Correlation coefficient") + ", r =", 6);
-				registerStatusItem("corr", resultPanel);
-			bottomPanel.add(resultPanel);
+			addResultPanel(bottomPanel);
 			
 			bottomPanel.add(createMarkingPanel(NO_HINTS));
 			
@@ -53,6 +52,12 @@ public class GuessCorrApplet extends MeanSDExerciseApplet {
 			bottomPanel.add(messagePanel);
 		
 		add("South", bottomPanel);
+	}
+	
+	protected void addResultPanel(XPanel thePanel) {
+		corrResultPanel = new ResultValuePanel(this, translate("Correlation coefficient") + ", r =", 6);
+		registerStatusItem("corr", corrResultPanel);
+		thePanel.add(corrResultPanel);
 	}
 	
 //-----------------------------------------------------------
@@ -88,7 +93,7 @@ public class GuessCorrApplet extends MeanSDExerciseApplet {
 		return getStringParam("xAxis");
 	}
 	
-	private String getXVarName() {
+	protected String getXVarName() {
 		return getStringParam("xVarName");
 	}
 	
@@ -110,7 +115,7 @@ public class GuessCorrApplet extends MeanSDExerciseApplet {
 		return getStringParam("yAxis");
 	}
 	
-	private String getYVarName() {
+	protected String getYVarName() {
 		return getStringParam("yVarName");
 	}
 	
@@ -122,7 +127,7 @@ public class GuessCorrApplet extends MeanSDExerciseApplet {
 		return ((MeanSD)getObjectParam("yMeanSD")).getSD();
 	}
 	
-	private NumValue getCorr() {
+	private NumValue getBaseCorr() {
 		return getNumValueParam("corr");
 	}
 	
@@ -151,7 +156,12 @@ public class GuessCorrApplet extends MeanSDExerciseApplet {
 		
 		thePanel.add("Center", displayPanel);
 		
+		addExportButton(data, thePanel);
+		
 		return thePanel;
+	}
+	
+	protected void addExportButton(DataSet data, XPanel thePanel) {			//  adds export button in external version
 	}
 	
 	protected void setDisplayForQuestion() {
@@ -164,7 +174,16 @@ public class GuessCorrApplet extends MeanSDExerciseApplet {
 		xAxis.setAxisName(getXVarName());
 		xAxis.invalidate();
 		
-		resultPanel.clear();
+		updateExportDataName();
+		
+		clearResults();
+	}
+	
+	protected void clearResults() {
+		corrResultPanel.clear();
+	}
+	
+	protected void updateExportDataName() {
 	}
 	
 	protected void setDataForQuestion() {
@@ -172,7 +191,8 @@ public class GuessCorrApplet extends MeanSDExerciseApplet {
 		double xSd = getXSD().toDouble();
 		double yMean = getYMean().toDouble();
 		double ySd = getYSD().toDouble();
-		double corr = getCorr().toDouble();
+		corr = getBaseCorr();
+		randomiseCorr(corr);
 		
 		int n = getCount();
 		NumSampleVariable xCoreVar = (NumSampleVariable)data.getVariable("xBase");
@@ -185,12 +205,17 @@ public class GuessCorrApplet extends MeanSDExerciseApplet {
 		
 		ScaledVariable xVar = (ScaledVariable)data.getVariable("x");
 		xVar.setScale(xMean, xSd, 9);
+		xVar.name = getXVarName();
 		
 		CorrelatedVariable yVar = (CorrelatedVariable)data.getVariable("y");
-		yVar.setMeanSdCorr(yMean, ySd, corr, 9);
+		yVar.setMeanSdCorr(yMean, ySd, corr.toDouble(), 9);
+		yVar.name = getYVarName();
 		
 		data.variableChanged("x");
 		data.variableChanged("y");
+	}
+	
+	protected void randomiseCorr(NumValue corr) {
 	}
 	
 	
@@ -198,8 +223,7 @@ public class GuessCorrApplet extends MeanSDExerciseApplet {
 	
 	protected void insertMessageContent(MessagePanel messagePanel) {
 //		String dataType = hasOption("normal") ? "normal distribution" : "data set";
-		double exact = getCorr().toDouble();
-		double attempt = getAttempt();
+		double exact = corr.toDouble();
 		switch (result) {
 			case ANS_UNCHECKED:
 				messagePanel.insertText("Estimate the correlation coefficient by eye from the scatterplot then type it into the text-edit box above.");
@@ -219,15 +243,15 @@ public class GuessCorrApplet extends MeanSDExerciseApplet {
 			case ANS_CORRECT:
 				messagePanel.insertRedHeading("Good!\n");
 				messagePanel.insertText("Your guess is as close as could be expected by eye.\n");
-				messagePanel.insertText("(The exact correlation coefficient is " + getCorr() + ".)");
+				messagePanel.insertText("(The exact correlation coefficient is " + corr + ".)");
 				break;
 			case ANS_CLOSE:
 				messagePanel.insertRedHeading("Close!\n");
-				messagePanel.insertText(closeHintString(exact, attempt));
+				messagePanel.insertText(closeHintString(exact, getAttempt()));
 				break;
 			case ANS_WRONG:
 				messagePanel.insertRedHeading("Not close enough!\n");
-				messagePanel.insertText(wrongHintString(exact, attempt));
+				messagePanel.insertText(wrongHintString(exact, getAttempt()));
 				break;
 		}
 	}
@@ -317,7 +341,7 @@ public class GuessCorrApplet extends MeanSDExerciseApplet {
 	}
 	
 	protected double getAttempt() {
-		return resultPanel.getAttempt().toDouble();
+		return corrResultPanel.getAttempt().toDouble();
 	}
 	
 	
@@ -328,32 +352,35 @@ public class GuessCorrApplet extends MeanSDExerciseApplet {
 	}
 	
 	protected int assessAnswer() {
-		double correct = getCorr().toDouble();
-		double lowExact = (correct < 0) ? correct - evalSlop(correct, 1.5) : correct - evalSlop(correct, 2.5);
-		double highExact = (correct < 0) ? correct + evalSlop(correct, 2.5) : correct + evalSlop(correct, 1.5);
-		
-		double lowClose = (correct < 0) ? correct - evalSlop(correct, 2.5) : correct - evalSlop(correct, 4);
-		double highClose = (correct < 0) ? correct + evalSlop(correct, 4) : correct + evalSlop(correct, 2.5);
-		
-		double attempt = getAttempt();
-		
-		if (resultPanel.isClear())
+		if (corrResultPanel.isClear())
 			return ANS_INCOMPLETE;
-		else if(attempt > 1.0 || attempt < -1.0)
-			return ANS_INVALID;
-		else
-			return (attempt >= lowExact && attempt <= highExact) ? ANS_CORRECT
-									: (attempt >= lowClose && attempt <= highClose) ? ANS_CLOSE : ANS_WRONG;
+		else {
+			double attempt = getAttempt();
+			if (attempt > 1.0 || attempt < -1.0)
+				return ANS_INVALID;
+			else {
+				double correct = corr.toDouble();
+				
+				double lowExact = (correct < 0) ? correct - evalSlop(correct, 1.5) : correct - evalSlop(correct, 2.5);
+				double highExact = (correct < 0) ? correct + evalSlop(correct, 2.5) : correct + evalSlop(correct, 1.5);
+				
+				double lowClose = (correct < 0) ? correct - evalSlop(correct, 2.5) : correct - evalSlop(correct, 4);
+				double highClose = (correct < 0) ? correct + evalSlop(correct, 4) : correct + evalSlop(correct, 2.5);
+				
+				return (attempt >= lowExact && attempt <= highExact) ? ANS_CORRECT
+										: (attempt >= lowClose && attempt <= highClose) ? ANS_CLOSE : ANS_WRONG;
+			}
+		}
 	}
 	
 	protected void giveFeedback() {
 	}
 	
 	protected void showCorrectWorking() {
-		resultPanel.showAnswer(getCorr());
+		corrResultPanel.showAnswer(corr);
 	}
 	
 	protected double getMark() {
-		return (assessAnswer() == ANS_CORRECT) ? 1 : (assessAnswer() == ANS_CLOSE) ? 0.8 : 0;
+		return (assessAnswer() == ANS_CORRECT) ? 1 : (assessAnswer() == ANS_CLOSE) ? (hasOption("externalAnalysis") ? 0.5 : 0.8) : 0;
 	}
 }

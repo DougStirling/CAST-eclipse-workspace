@@ -74,4 +74,13 @@ public class LinearEquationPanel extends Binary implements StatusInterface {
 		((ExerciseApplet)context.getApplet()).noteChangedWorking();
 		return true;
 	}
+	
+	public boolean isClear() {
+		return interceptEdit.isClear() || slopeEdit.isClear();
+	}
+	
+	public void setClear() {
+		interceptEdit.setClear();
+		slopeEdit.setClear();
+	}
 }

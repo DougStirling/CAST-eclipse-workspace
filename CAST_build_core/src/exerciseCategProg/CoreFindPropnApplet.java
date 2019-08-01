@@ -22,7 +22,8 @@ abstract public class CoreFindPropnApplet extends ExerciseApplet {
 	
 	
 	static final protected Color kTemplateColor = new Color(0x000099);	//	dark blue
-	static final protected Color kTemplateBackground = new Color(0xFFE594);
+//	static final protected Color kTemplateBackground = new Color(0xFFE594);
+	static final protected Color kTemplateBackground = new Color(0xEEE5FF);
 	
 	static final protected double kEps = 0.0005;
 	static final protected double kRoughEps = 0.005;

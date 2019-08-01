@@ -3,6 +3,8 @@ package exerciseSDProg;
 import java.awt.*;
 import java.util.*;
 
+import javax.swing.BorderFactory;
+
 import dataView.*;
 import axis.*;
 import utils.*;
@@ -32,6 +34,8 @@ public class CenterSpreadApplet extends ExerciseApplet {
 	
 	private HorizAxis theAxis;
 	private StackedPlusSdView theView;
+	
+	private ExportDataButton exportButton;
 	
 	private DiffMeanSDChoicePanel meanChoicePanel, sdChoicePanel;
 	
@@ -77,6 +81,8 @@ public class CenterSpreadApplet extends ExerciseApplet {
 		registerParameter("groupNames", "string");
 		registerParameter("meanOptions", "string");
 		registerParameter("sdOptions", "string");
+		registerParameter("factorName", "string");
+		registerParameter("dataName", "string");
 	}
 	
 	private int getDiffMeanType() {
@@ -103,6 +109,14 @@ public class CenterSpreadApplet extends ExerciseApplet {
 		return getStringParam("groupNames");
 	}
 	
+	public String getFactorName() {
+		return getStringParam("factorName");
+	}
+	
+	public String getDataName() {
+		return getStringParam("dataName");
+	}
+	
 	private String[] getOptionArray(String name) {
 		StringTokenizer st = new StringTokenizer(getStringParam(name), " ");
 		String result[] = new String[st.countTokens()];
@@ -125,19 +139,29 @@ public class CenterSpreadApplet extends ExerciseApplet {
 	protected XPanel getWorkingPanels(DataSet data) {
 		XPanel thePanel = new XPanel();
 		thePanel.setLayout(new BorderLayout(0, 4));
-		
-			XPanel dotPlotPanel = new XPanel();
-			dotPlotPanel.setLayout(new AxisLayout());
+
+		if (hasOption("externalAnalysis")) {
+			XPanel buttonPanel = new XPanel();
+			buttonPanel.setLayout(new VerticalLayout(VerticalLayout.CENTER, VerticalLayout.VERT_CENTER));
+
+			exportButton = new ExportDataButton("Export Data", data, (String)null, "", this);
+			exportButton.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+				if (hasOption("stacked")) {
+					String[] stackedKeys = {"y", "group"};
+					exportButton.setKeys(stackedKeys);
+				}
+				else {
+					String[] groupKeys = {"ya", "yb"};
+					exportButton.setKeys(groupKeys);
+				}
+			buttonPanel.add(exportButton);
 			
-				theAxis = new HorizAxis(this);
-			dotPlotPanel.add("Bottom", theAxis);
-			
-				theView = new StackedPlusSdView(data, this, theAxis, "y", "group", 9);
-				theView.setShowStatistics(false);
-				theView.lockBackground(Color.white);
-			dotPlotPanel.add("Center", theView);
-			
-		thePanel.add("Center", dotPlotPanel);
+			thePanel.add("Center", buttonPanel);
+		}
+		else {
+			XPanel dotPlotPanel = createPlot();
+			thePanel.add("Center", dotPlotPanel);
+		}
 		
 			XPanel bottomPanel = new XPanel();
 			bottomPanel.setLayout(new ProportionLayout(0.5, 0));
@@ -197,6 +221,20 @@ public class CenterSpreadApplet extends ExerciseApplet {
 		return thePanel;
 	}
 	
+	private XPanel createPlot() {
+		XPanel dotPlotPanel = new XPanel();
+		dotPlotPanel.setLayout(new AxisLayout());
+		
+			theAxis = new HorizAxis(this);
+		dotPlotPanel.add("Bottom", theAxis);
+		
+			theView = new StackedPlusSdView(data, this, theAxis, "y", "group", 9);
+			theView.setShowStatistics(false);
+			theView.lockBackground(Color.white);
+		dotPlotPanel.add("Center", theView);
+		return dotPlotPanel;
+	}
+	
 	private void addMenuOptions() {
 		String yaName = data.getVariable("ya").name;
 		String ybName = data.getVariable("yb").name;
@@ -213,12 +251,11 @@ public class CenterSpreadApplet extends ExerciseApplet {
 	}
 	
 	protected void setDisplayForQuestion() {
-		theAxis.readNumLabels(getAxisInfo());
-		theAxis.setAxisName(getVarName());
-		theAxis.invalidate();
-		
-		theView.setCrossSize(DataView.LARGE_CROSS);
-		theView.repaint();
+		if (hasOption("externalAnalysis")) {
+			exportButton.setDataName(getDataName());
+		}
+		else
+			updatePlotVariable();
 		
 		CoreVariable yaVar = data.getVariable("ya");
 		CoreVariable ybVar = data.getVariable("yb");
@@ -234,6 +271,15 @@ public class CenterSpreadApplet extends ExerciseApplet {
 		addMenuOptions();
 		meanChoice.invalidate();
 		sdChoice.invalidate();
+	}
+	
+	private void updatePlotVariable() {
+		theAxis.readNumLabels(getAxisInfo());
+		theAxis.setAxisName(getVarName());
+		theAxis.invalidate();
+		
+		theView.setCrossSize(DataView.LARGE_CROSS);
+		theView.repaint();
 	}
 	
 	protected void setDataForQuestion() {
@@ -257,6 +303,11 @@ public class CenterSpreadApplet extends ExerciseApplet {
 		
 		StackedKeyVariable groupVar = (StackedKeyVariable)data.getVariable("group");
 		groupVar.setSourceVar(data, kYGroupKeys);		//		sets group counts and names
+		if (hasOption("externalAnalysis") && hasOption("stacked")) {
+			groupVar.name = getFactorName();
+			StackedNumVariable yVar = (StackedNumVariable)data.getVariable("y");
+			yVar.name = getVarName();
+		}
 		
 		int diffMeanType = getDiffMeanType();
 		int diffSdType = getDiffSdType();
@@ -324,10 +375,18 @@ public class CenterSpreadApplet extends ExerciseApplet {
 			messagePanel.insertText("Select one of the three options on the left by clicking on a radio button; then choose the option from the pop-up menu below that best summarises this.\nFinally, do the same on the right.");
 		else if (result == ANS_TOLD) {
 			messagePanel.insertRedHeading("Answer\n");
+			addPlotToMessage(messagePanel);
 			messagePanel.insertBoldText(translate("Centre") + ": ");
 			messagePanel.insertText(meanChoicePanel.getSelectedOptionMessage());
 			messagePanel.insertBoldText("\nSpread: ");
 			messagePanel.insertText(sdChoicePanel.getSelectedOptionMessage());
+		}
+		else if (resultMean == ANS_INCOMPLETE || resultSD == ANS_INCOMPLETE) {
+			messagePanel.insertRedHeading("Wrong!\n");
+			if (resultMean == ANS_INCOMPLETE)
+				messagePanel.insertRedText("You must select an option on the left by clicking a radio button.\n");
+			if (resultSD == ANS_INCOMPLETE)
+				messagePanel.insertRedText("You must select an option on the right by clicking a radio button.\n");
 		}
 		else {
 			if (resultMean == ANS_CORRECT && resultSD == ANS_CORRECT)
@@ -336,9 +395,6 @@ public class CenterSpreadApplet extends ExerciseApplet {
 				messagePanel.insertRedHeading("Wrong!\n");
 			messagePanel.insertBoldText(translate("Centre") + ": ");
 			switch (resultMean) {
-				case ANS_INCOMPLETE:
-					messagePanel.insertRedText("You must select an option on the left by clicking a radio button.");
-					break;
 				case ANS_CORRECT:
 					if (resultSD == ANS_CORRECT)
 						messagePanel.insertText("Yes. " + meanChoicePanel.getSelectedOptionMessage());
@@ -358,9 +414,6 @@ public class CenterSpreadApplet extends ExerciseApplet {
 			
 			messagePanel.insertBoldText("\nSpread: ");
 			switch (resultSD) {
-				case ANS_INCOMPLETE:
-					messagePanel.insertRedText("You must select an option on the right by clicking a radio button.");
-					break;
 				case ANS_CORRECT:
 					if (resultMean == ANS_CORRECT)
 						messagePanel.insertText("Yes. " + sdChoicePanel.getSelectedOptionMessage());
@@ -377,11 +430,25 @@ public class CenterSpreadApplet extends ExerciseApplet {
 					messagePanel.insertRedText("your summary is not consistent with this.");
 					break;
 			}
+			addPlotToMessage(messagePanel);
 		}
 	}
 	
+	private void addPlotToMessage(MessagePanel messagePanel) {
+		XPanel plot = createPlot();
+		updatePlotVariable();
+		plot.setOpaque(false);
+		theAxis.setOpaque(false);
+		plot.setPreferredSize(new Dimension(getSize().width - 50, 150));
+		messagePanel.insertGraph(plot);
+		messagePanel.insertText("\n");
+	}
+	
 	protected int getMessageHeight() {
-		return 120;
+		if (hasOption("externalAnalysis"))
+			return 270;
+		else
+			return 120;
 	}
 	
 //-----------------------------------------------------------

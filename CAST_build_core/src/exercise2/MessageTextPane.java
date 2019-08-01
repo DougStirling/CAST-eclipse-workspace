@@ -4,6 +4,7 @@ import java.awt.*;
 import javax.swing.*;
 import javax.swing.text.*;
 
+import dataView.*;
 import utils.*;
 import formula.*;
 import images.*;
@@ -170,6 +171,16 @@ public class MessageTextPane extends JTextPane {
 		setSelectionToEnd();
 		try {
 			insertComponent(choice);
+		} catch (Exception e) {
+			throw new RuntimeException("Error displaying page in MessagePanel: " + e);
+		}
+		setSelectionToStart();
+	}
+	
+	public void insertGraph(XPanel graph) {
+		setSelectionToEnd();
+		try {
+			insertComponent(graph);
 		} catch (Exception e) {
 			throw new RuntimeException("Error displaying page in MessagePanel: " + e);
 		}

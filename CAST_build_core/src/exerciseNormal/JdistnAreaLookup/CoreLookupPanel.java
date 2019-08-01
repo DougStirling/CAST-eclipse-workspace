@@ -73,6 +73,11 @@ abstract public class CoreLookupPanel extends XPanel implements ExerciseConstant
 		add("North", editPanel);
 	}
 	
+	public void disableEdit() {
+		editPanel.setCanEdit(false);
+		distnView.setDragEnabled(false);
+	}
+	
 	abstract protected CoreDistnLookupView getDistnLookupView(DataSet data, String distnKey,
 																	ExerciseApplet exerciseApplet, HorizAxis theAxis, boolean highAndLow);
 	

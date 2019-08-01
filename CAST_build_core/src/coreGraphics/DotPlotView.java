@@ -22,6 +22,8 @@ public class DotPlotView extends MarginalDataView {
 	private double initialJittering = 0.0;
 	private boolean jitteringInitialised = false;
 	
+	private Color hiliteBackgroundColor = Color.red;
+	
 	private int minWidth = kMinDotPlotWidth;
 	
 	public DotPlotView(DataSet theData, XApplet applet, NumCatAxis theAxis, double initialJittering) {
@@ -44,6 +46,10 @@ public class DotPlotView extends MarginalDataView {
 	
 	public void setMinDisplayWidth(int minWidth) {
 		this.minWidth = minWidth;
+	}
+	
+	public void setHiliteBackgroundColor(Color c) {
+		hiliteBackgroundColor = c;
 	}
 	
 	protected boolean isBadValue(NumValue theVal) {
@@ -80,7 +86,7 @@ public class DotPlotView extends MarginalDataView {
 		
 		checkJittering();
 		
-		g.setColor(Color.red);
+		g.setColor(hiliteBackgroundColor);
 		ValueEnumeration e = variable.values();
 		FlagEnumeration fe = getSelection().getEnumeration();
 		int index = 0;

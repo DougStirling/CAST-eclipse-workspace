@@ -91,7 +91,7 @@ public class MultipleBarPieView extends CoreDragItemsView {
 		
 		int radius = height / 2 - kPieVertBorder;
 		int top = baseline + height - kPieVertBorder;
-		int left = kPieVertBorder;
+		int left = kPieVertBorder + (getSize().width - 2 * radius - kPieVertBorder) / 2;
 		Point topLeft = translateToScreen(left, top, null);
 		
 		int startAngle = 90;

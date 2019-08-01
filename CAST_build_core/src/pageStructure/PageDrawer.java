@@ -104,6 +104,7 @@ public class PageDrawer extends CoreDrawer {
 	private Map namedApplets = new HashMap();
 	
 	public PageDrawer(DomElement theElement, BookFrame theBookFrame) {
+//		showElapsedTime("Starting page");
 		int effectiveVersion = theBookFrame.getEffectivePageVersion();
 		File f = theElement.getFile(effectiveVersion);
 		String html = getFileAsString(f);
@@ -145,11 +146,11 @@ public class PageDrawer extends CoreDrawer {
 			addChild(new TitleDrawer(chapterTitleString, true, coreDir));
 		else if (moduleTitleString != null)
 			addChild(new TitleDrawer(moduleTitleString, false, coreDir));
-		
+
 		Map codeBlocks = new HashMap<String, String>();
 		bodyString = extractTables(bodyString, codeBlocks);
 			
-		bodyString = replaceExercises(html, bodyString, theBookFrame);
+		bodyString = replaceExercises(html, bodyString, theBookFrame, codeBlocks);
 		bodyString = extractApplets(bodyString, codeBlocks);
 		
 		bodyString = replaceDiagramChoice(html, bodyString);
@@ -166,6 +167,8 @@ public class PageDrawer extends CoreDrawer {
 //		System.out.println(bodyString);
 		
 		addChild(new NextButtonDrawer(theElement, theBookFrame));
+
+//		showElapsedTime("Created page");
 	}
 	
 	private String extractTables(String bodyHtml, Map codeBlocks) {
@@ -209,9 +212,9 @@ public class PageDrawer extends CoreDrawer {
 	private String extractApplets(String bodyHtml, Map codeBlocks) {
 		String outputString = "";
 		String remainingString = bodyHtml;
-		int nextIndex = 0;
+		int nextIndex = codeBlocks.size();
 		while (true) {
-			int tableIndex = remainingString.indexOf("<applet");
+			int tableIndex = remainingString.indexOf("<applet ");
 			if (tableIndex < 0) {
 				outputString += remainingString;
 				break;
@@ -429,7 +432,7 @@ public class PageDrawer extends CoreDrawer {
 		return bodyHtml;
 	}
 	
-	private String replaceExercises(String allHtml, String bodyHtml, BookFrame theBookFrame) {
+	private String replaceExercises(String allHtml, String bodyHtml, BookFrame theBookFrame, Map codeBlocks) {
 		Pattern topicPattern = Pattern.compile(kExerciseTopicPattern, Pattern.CASE_INSENSITIVE + Pattern.DOTALL);
 		Matcher topicMatcher = topicPattern.matcher(allHtml);
 		if (topicMatcher.find()) {
@@ -438,6 +441,7 @@ public class PageDrawer extends CoreDrawer {
 			while (true) {
 				Pattern exercisePattern = Pattern.compile(kExercisePattern, Pattern.CASE_INSENSITIVE + Pattern.DOTALL);
 				Matcher exerciseMatcher = exercisePattern.matcher(bodyHtml);
+//				showElapsedTime("About to look for exercise");
 				if (exerciseMatcher.find()) {
 					String startString = exerciseMatcher.group(1);
 					String appletName = exerciseMatcher.group(2);
@@ -453,17 +457,27 @@ public class PageDrawer extends CoreDrawer {
 					else
 						options = options.replaceAll("\"", "");
 					String endString = exerciseMatcher.group(5);
-					
+
+//					showElapsedTime("About to start creating exercise: "+ topicName + ", " + appletName);
 					DomExercise theExercise = new DomExercise(theBookFrame.getEbook(), topicName,
 																											appletName, variations, options);
+//					showElapsedTime("Created exercise: "+ topicName + ", " + appletName);
 					String appletString = theExercise.getAppletString();
-					bodyHtml = startString + "\n" + appletString + endString;
+					
+					int nextIndex = codeBlocks.size();
+					String key = "<appletBlock " + nextIndex + ">";
+					codeBlocks.put(key, appletString);
+					bodyHtml = startString + "\n" + key + "\n" + endString;
+					
+//					showElapsedTime("Got applet string: "+ topicName + ", " + appletName);
 //					System.out.println("Variations: " + variations);
 //					System.out.println("Options: " + options);
 //					System.out.println(appletString);
 				}
-				else
+				else {
+//					showElapsedTime("Not found exercise");
 					break;
+				}
 			}
 		}
 		return bodyHtml;
